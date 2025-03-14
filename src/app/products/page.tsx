@@ -25,7 +25,7 @@ export default function ProductRenamePage() {
 
   useEffect(() => {
     // Fetch products
-    fetch("/api/products")
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/products`)
       .then((res) => res.json())
       .then((data) => setProducts(data));
 

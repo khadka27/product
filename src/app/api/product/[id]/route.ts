@@ -31,7 +31,7 @@ export async function PUT(
 
   // Regenerate the generated_link based on new old_name.
   const slug = old_name.toLowerCase().trim().replace(/\s+/g, "-");
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const generated_link = `${siteUrl}/product/${slug}-${id}`;
 
   try {

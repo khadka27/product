@@ -39,9 +39,9 @@ export async function POST(req: Request) {
   for (const entry of formData.entries()) {
     const [key, value] = entry;
     if (value instanceof File) {
-      const filePath = `/uploads/${Date.now()}_${value.name}`;
+      const filePath = `${process.env.NEXT_PUBLIC_SITE_URL}/uploads/${Date.now()}_${value.name}`;
       const buffer = await value.arrayBuffer();
-      fs.writeFileSync(`./public${filePath}`, Buffer.from(buffer));
+      fs.writeFileSync(`${process.env.NEXT_PUBLIC_SITE_URL}./public${filePath}`, Buffer.from(buffer));
       if (key === "old_images") {
         oldImages.push(filePath);
       } else if (key === "new_images") {
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     );
     // Generate a slug from old_name (e.g., "Old Product" -> "old-product").
     const slug = old_name.toLowerCase().trim().replace(/\s+/g, "-");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     const generatedLink = `${siteUrl}/product/${slug}-${id}`;
 
     // Update the product record with the generated link.

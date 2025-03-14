@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -71,7 +73,9 @@ export default function DashboardClient({ user }: { user?: any }) {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("/api/products");
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/products`
+      );
       setProducts(res.data);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -79,7 +83,10 @@ export default function DashboardClient({ user }: { user?: any }) {
   };
 
   const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: "/login" });
+    await signOut({
+      redirect: true,
+      callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
+    });
   };
 
   // Copy a given link to clipboard.
@@ -95,14 +102,16 @@ export default function DashboardClient({ user }: { user?: any }) {
 
   // Redirect to an edit page. You need to implement this page.
   const handleEdit = (id: string) => {
-    router.push(`/admin/edit-product/${id}`);
+    router.push(`${process.env.NEXT_PUBLIC_SITE_URL}/admin/edit-product/${id}`);
   };
 
   // Delete the product via DELETE endpoint and refresh list.
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
-        await axios.delete(`/api/product/${id}`);
+        await axios.delete(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${id}`
+        );
         alert("Product deleted successfully");
         fetchProducts();
       } catch (error) {
