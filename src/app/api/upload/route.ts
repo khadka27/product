@@ -2,24 +2,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { initializeDatabase, insertProduct } from "@/lib/models";
-import multer from "multer";
 import fs from "fs";
+import path from "path";
 import db from "@/lib/db";
 
 // Ensure the uploads directory exists
-const uploadDir = "./public/uploads/";
+const uploadDir = path.join(process.cwd(), "public", "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
-// Configure Multer for file uploads (we handle saving manually below)
-const storage = multer.diskStorage({
-  destination: uploadDir,
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "_" + file.originalname);
-  },
-});
-const upload = multer({ storage });
 
 export async function POST(req: Request) {
   // Initialize the database/table if needed.
@@ -39,18 +30,20 @@ export async function POST(req: Request) {
   for (const entry of formData.entries()) {
     const [key, value] = entry;
     if (value instanceof File) {
-      const filePath = `${
-        process.env.NEXT_PUBLIC_SITE_URL
-      }/uploads/${Date.now()}_${value.name}`;
+      // Generate a unique file name.
+      const fileName = `${Date.now()}_${value.name}`;
+      // Build the local file path.
+      const localFilePath = path.join(uploadDir, fileName);
+      // Read file as a buffer.
       const buffer = await value.arrayBuffer();
-      fs.writeFileSync(
-        "./public${filePath}",
-        Buffer.from(buffer)
-      );
+      fs.writeFileSync(localFilePath, Buffer.from(buffer));
+
+      // Build the public URL using your environment variable.
+      const fileUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/uploads/${fileName}`;
       if (key === "old_images") {
-        oldImages.push(filePath);
+        oldImages.push(fileUrl);
       } else if (key === "new_images") {
-        newImages.push(filePath);
+        newImages.push(fileUrl);
       }
     }
   }
