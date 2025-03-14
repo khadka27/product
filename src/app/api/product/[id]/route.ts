@@ -2,12 +2,15 @@
 import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+type Params = {
+  params: {
+    id: string;
+  };
+};
+
+export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const { id } = context.params;
+    const { id } = params;
     if (!id)
       return NextResponse.json(
         { error: "Missing product ID" },
@@ -28,12 +31,9 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: Params) {
   try {
-    const { id } = context.params;
+    const { id } = params;
     if (!id)
       return NextResponse.json(
         { error: "Missing product ID" },
@@ -85,12 +85,9 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: Params) {
   try {
-    const { id } = context.params;
+    const { id } = params;
     if (!id)
       return NextResponse.json(
         { error: "Missing product ID" },
