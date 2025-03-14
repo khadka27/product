@@ -1,75 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type NextRequest, NextResponse } from "next/server";
+// app/api/product/[id]/route.ts
+import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
-// ✅ Correct GET request with Next.js 15 App Router
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } } // ✅ Corrected type
-): Promise<NextResponse> {
-  try {
-    const id = params?.id;
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing product ID" },
-        { status: 400 }
-      );
-    }
-
-    // Fetch product from database
-    const [rows]: any = await db.query("SELECT * FROM products WHERE id = ?", [
-      Number(id),
-    ]);
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(rows[0]);
-  } catch (error: any) {
-    console.error("GET Error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+  const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
+  const products = rows as any[];
+  if (!products || products.length === 0) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
+  return NextResponse.json(products[0]);
 }
 
-// ✅ Correct PUT request
 export async function PUT(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
-): Promise<NextResponse> {
+) {
+  const { id } = params;
+  // Use formData() because the request payload is multipart/form-data
+  const formData = await request.formData();
+  const old_name = formData.get("old_name") as string;
+  const new_name = formData.get("new_name") as string;
+  const description = formData.get("description") as string;
+  const next_redirect_url = formData.get("next_redirect_url") as string;
+  const theme = formData.get("theme") as string;
+
+  // Regenerate the generated_link based on new old_name.
+  const slug = old_name.toLowerCase().trim().replace(/\s+/g, "-");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const generated_link = `${siteUrl}/product/${slug}-${id}`;
+
   try {
-    const id = params?.id;
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing product ID" },
-        { status: 400 }
-      );
-    }
-
-    const formData = await request.json(); // ✅ Use JSON parsing for Next.js 15
-    const { old_name, new_name, description, next_redirect_url, theme } =
-      formData;
-
-    if (
-      !old_name ||
-      !new_name ||
-      !description ||
-      !next_redirect_url ||
-      !theme
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    const slug = old_name.toLowerCase().trim().replace(/\s+/g, "-");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    const generated_link = `${siteUrl}/product/${slug}-${id}`;
-
     await db.query(
       `UPDATE products
        SET old_name = ?, new_name = ?, description = ?, next_redirect_url = ?, theme = ?, generated_link = ?
@@ -81,42 +46,24 @@ export async function PUT(
         next_redirect_url,
         theme,
         generated_link,
-        Number(id),
+        id,
       ]
     );
-
     return NextResponse.json({ message: "Product updated", generated_link });
   } catch (error: any) {
-    console.error("PUT Error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// ✅ Correct DELETE request
 export async function DELETE(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
-): Promise<NextResponse> {
+) {
+  const { id } = params;
   try {
-    const id = params?.id;
-    if (!id) {
-      return NextResponse.json(
-        { error: "Missing product ID" },
-        { status: 400 }
-      );
-    }
-
-    await db.query("DELETE FROM products WHERE id = ?", [Number(id)]);
-
+    await db.query("DELETE FROM products WHERE id = ?", [id]);
     return NextResponse.json({ message: "Product deleted" });
   } catch (error: any) {
-    console.error("DELETE Error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
