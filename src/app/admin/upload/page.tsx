@@ -81,9 +81,13 @@ export default function UploadPage() {
     formData.new_images.forEach((file) => data.append("new_images", file));
 
     try {
-      const res = await axios.post("/api/upload", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/upload`,
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       if (res.status === 200) {
         const productId = res.data.id;
         setSavedProductId(productId);
