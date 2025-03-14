@@ -7,7 +7,7 @@ import fs from "fs";
 import db from "@/lib/db";
 
 // Ensure the uploads directory exists
-const uploadDir = "${process.env.NEXT_PUBLIC_SITE_URL}/public/uploads/";
+const uploadDir = `${process.env.NEXT_PUBLIC_SITE_URL}/public/uploads/`;
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
