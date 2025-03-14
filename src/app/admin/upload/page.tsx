@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,13 +79,10 @@ export default function UploadPage() {
     formData.new_images.forEach((file) => data.append("new_images", file));
 
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/api/upload`,
-        data,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+      const res = await axios.post(`${baseUrl}/api/upload`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (res.status === 200) {
         const productId = res.data.id;
         setSavedProductId(productId);
@@ -253,7 +248,6 @@ export default function UploadPage() {
                         required
                         className="cursor-pointer"
                       />
-
                       {oldImagePreviews.length > 0 && (
                         <div className="mt-4">
                           <p className="text-sm text-gray-500 mb-2">
@@ -289,7 +283,6 @@ export default function UploadPage() {
                         required
                         className="cursor-pointer"
                       />
-
                       {newImagePreviews.length > 0 && (
                         <div className="mt-4">
                           <p className="text-sm text-gray-500 mb-2">
