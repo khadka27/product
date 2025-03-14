@@ -2,13 +2,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
-// ✅ Correct GET request with Next.js 14+ App Router
+// ✅ Correct GET request with Next.js 15+ App Router
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } } // Ensure correct param handling
 ) {
   try {
-    const id = params?.id; // Extract id properly
+    const id = params?.id;
     if (!id) {
       return NextResponse.json(
         { error: "Missing product ID" },
@@ -27,7 +27,11 @@ export async function GET(
 
     return NextResponse.json(rows[0]);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -45,12 +49,9 @@ export async function PUT(
       );
     }
 
-    const formData = await request.formData();
-    const old_name = formData.get("old_name")?.toString();
-    const new_name = formData.get("new_name")?.toString();
-    const description = formData.get("description")?.toString();
-    const next_redirect_url = formData.get("next_redirect_url")?.toString();
-    const theme = formData.get("theme")?.toString();
+    const formData = await request.json(); // Use `.json()` instead of `formData()`
+    const { old_name, new_name, description, next_redirect_url, theme } =
+      formData;
 
     if (
       !old_name ||
@@ -86,7 +87,11 @@ export async function PUT(
 
     return NextResponse.json({ message: "Product updated", generated_link });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("PUT Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -108,6 +113,10 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Product deleted" });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("DELETE Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
