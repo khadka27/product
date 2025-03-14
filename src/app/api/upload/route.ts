@@ -7,7 +7,7 @@ import fs from "fs";
 import db from "@/lib/db";
 
 // Ensure the uploads directory exists
-const uploadDir = `${process.env.NEXT_PUBLIC_SITE_URL}/public/uploads/`;
+const uploadDir = "./public/uploads/";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       }/uploads/${Date.now()}_${value.name}`;
       const buffer = await value.arrayBuffer();
       fs.writeFileSync(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/public${filePath}`,
+        "./public${filePath}",
         Buffer.from(buffer)
       );
       if (key === "old_images") {

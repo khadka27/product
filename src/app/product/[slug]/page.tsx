@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -70,7 +69,7 @@ export default function ProductComparisonPage() {
 
     // First, get all products
     axios
-      .get(`${process.env.NEXT_PUBLIC_SITE_URL}/api/products`)
+      .get("/api/products")
       .then((response) => {
         const products = response.data;
 
