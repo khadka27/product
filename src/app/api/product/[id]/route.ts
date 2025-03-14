@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     if (!id)
       return NextResponse.json(
         { error: "Missing product ID" },
@@ -15,7 +15,7 @@ export async function GET(
       );
 
     const [rows]: any = await db.query("SELECT * FROM products WHERE id = ?", [
-      parseInt(id, 10),
+      Number.parseInt(id, 10),
     ]);
 
     if (!rows || rows.length === 0) {
@@ -29,11 +29,11 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     if (!id)
       return NextResponse.json(
         { error: "Missing product ID" },
@@ -75,7 +75,7 @@ export async function PUT(
         next_redirect_url,
         theme,
         generated_link,
-        parseInt(id, 10),
+        Number.parseInt(id, 10),
       ]
     );
 
@@ -86,18 +86,20 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     if (!id)
       return NextResponse.json(
         { error: "Missing product ID" },
         { status: 400 }
       );
 
-    await db.query("DELETE FROM products WHERE id = ?", [parseInt(id, 10)]);
+    await db.query("DELETE FROM products WHERE id = ?", [
+      Number.parseInt(id, 10),
+    ]);
 
     return NextResponse.json({ message: "Product deleted" });
   } catch (error: any) {
