@@ -2,13 +2,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
-type Params = {
-  params: {
-    id: string;
-  };
-};
-
-export async function GET(request: NextRequest, { params }: Params) {
+// This is the exact type structure Next.js expects
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const { id } = params;
     if (!id)
@@ -31,7 +29,10 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const { id } = params;
     if (!id)
@@ -85,7 +86,10 @@ export async function PUT(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const { id } = params;
     if (!id)
