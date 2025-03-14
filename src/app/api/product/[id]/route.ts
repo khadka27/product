@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/product/[id]/route.ts
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
+// ✅ GET: Fetch a product by ID.
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  // Await the params object.
+  const { id } = await params;
   const [rows] = await db.query("SELECT * FROM products WHERE id = ?", [id]);
   const products = rows as any[];
   if (!products || products.length === 0) {
@@ -16,12 +17,13 @@ export async function GET(
   return NextResponse.json(products[0]);
 }
 
+// ✅ PUT: Update a product by ID.
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
-  // Use formData() because the request payload is multipart/form-data
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  const { id } = await params;
+  // Use formData() because the request payload is multipart/form-data.
   const formData = await request.formData();
   const old_name = formData.get("old_name") as string;
   const new_name = formData.get("new_name") as string;
@@ -55,11 +57,12 @@ export async function PUT(
   }
 }
 
+// ✅ DELETE: Remove a product by ID.
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  const { id } = await params;
   try {
     await db.query("DELETE FROM products WHERE id = ?", [id]);
     return NextResponse.json({ message: "Product deleted" });
