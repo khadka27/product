@@ -2,11 +2,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
-// ✅ Correct GET request with Next.js 15+ App Router
+// ✅ Correct GET request with Next.js 15 App Router
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } } // Ensure correct param handling
-) {
+  { params }: { params: { id: string } } // ✅ Corrected type
+): Promise<NextResponse> {
   try {
     const id = params?.id;
     if (!id) {
@@ -39,7 +39,7 @@ export async function GET(
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const id = params?.id;
     if (!id) {
@@ -49,7 +49,7 @@ export async function PUT(
       );
     }
 
-    const formData = await request.json(); // Use `.json()` instead of `formData()`
+    const formData = await request.json(); // ✅ Use JSON parsing for Next.js 15
     const { old_name, new_name, description, next_redirect_url, theme } =
       formData;
 
@@ -99,7 +99,7 @@ export async function PUT(
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   try {
     const id = params?.id;
     if (!id) {
