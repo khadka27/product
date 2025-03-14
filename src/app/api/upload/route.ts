@@ -7,7 +7,7 @@ import fs from "fs";
 import db from "@/lib/db";
 
 // Ensure the uploads directory exists
-const uploadDir = "./public/uploads/";
+const uploadDir = "${process.env.NEXT_PUBLIC_SITE_URL}/public/uploads/";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -39,9 +39,14 @@ export async function POST(req: Request) {
   for (const entry of formData.entries()) {
     const [key, value] = entry;
     if (value instanceof File) {
-      const filePath = `${process.env.NEXT_PUBLIC_SITE_URL}/uploads/${Date.now()}_${value.name}`;
+      const filePath = `${
+        process.env.NEXT_PUBLIC_SITE_URL
+      }/uploads/${Date.now()}_${value.name}`;
       const buffer = await value.arrayBuffer();
-      fs.writeFileSync(`${process.env.NEXT_PUBLIC_SITE_URL}./public${filePath}`, Buffer.from(buffer));
+      fs.writeFileSync(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/public${filePath}`,
+        Buffer.from(buffer)
+      );
       if (key === "old_images") {
         oldImages.push(filePath);
       } else if (key === "new_images") {

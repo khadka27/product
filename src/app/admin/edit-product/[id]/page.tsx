@@ -47,7 +47,9 @@ export default function EditProductPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`/api/product/${params.id}`);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`
+        );
         setProduct(res.data);
         setFormData({
           old_name: res.data.old_name,
