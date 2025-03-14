@@ -2,21 +2,23 @@
 import { type NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
-// This is the exact type structure Next.js expects
+// ✅ Correct GET request with Next.js 14+ App Router
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-    if (!id)
+    const id = params?.id; // Extract id properly
+    if (!id) {
       return NextResponse.json(
         { error: "Missing product ID" },
         { status: 400 }
       );
+    }
 
+    // Fetch product from database
     const [rows]: any = await db.query("SELECT * FROM products WHERE id = ?", [
-      Number.parseInt(id, 10),
+      Number(id),
     ]);
 
     if (!rows || rows.length === 0) {
@@ -29,17 +31,19 @@ export async function GET(
   }
 }
 
+// ✅ Correct PUT request
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-    if (!id)
+    const id = params?.id;
+    if (!id) {
       return NextResponse.json(
         { error: "Missing product ID" },
         { status: 400 }
       );
+    }
 
     const formData = await request.formData();
     const old_name = formData.get("old_name")?.toString();
@@ -76,7 +80,7 @@ export async function PUT(
         next_redirect_url,
         theme,
         generated_link,
-        Number.parseInt(id, 10),
+        Number(id),
       ]
     );
 
@@ -86,21 +90,21 @@ export async function PUT(
   }
 }
 
+// ✅ Correct DELETE request
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
-    if (!id)
+    const id = params?.id;
+    if (!id) {
       return NextResponse.json(
         { error: "Missing product ID" },
         { status: 400 }
       );
+    }
 
-    await db.query("DELETE FROM products WHERE id = ?", [
-      Number.parseInt(id, 10),
-    ]);
+    await db.query("DELETE FROM products WHERE id = ?", [Number(id)]);
 
     return NextResponse.json({ message: "Product deleted" });
   } catch (error: any) {
