@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    domains: ["productrename.vercel.app", "localhost"], // Allow images from localhost
+  },
 };
 
 export default nextConfig;
