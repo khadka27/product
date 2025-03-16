@@ -6,8 +6,12 @@ import fs from "fs";
 import path from "path";
 import db from "@/lib/db";
 
-// Ensure the uploads directory exists
-const uploadDir = path.join(process.cwd(), "public", "uploads");
+// Use /tmp in production for a writable directory; fallback to public/uploads in development.
+const uploadDir =
+  process.env.NODE_ENV === "production"
+    ? path.join("/tmp", "uploads")
+    : path.join(process.cwd(), "public", "uploads");
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
