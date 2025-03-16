@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState } from "react";
@@ -79,7 +80,7 @@ export default function UploadPage() {
     formData.new_images.forEach((file) => data.append("new_images", file));
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
       const res = await axios.post(`${baseUrl}/api/upload`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
