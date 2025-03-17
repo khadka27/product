@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     );
     // Generate a slug from old_name (e.g., "Old Product" -> "old-product").
     const slug = old_name.toLowerCase().trim().replace(/\s+/g, "-");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!.replace(/\/$/, "");
     const generatedLink = `${siteUrl}/product/${slug}-${id}`;
 
     // Update the product record with the generated link.
