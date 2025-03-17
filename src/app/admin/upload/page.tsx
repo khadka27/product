@@ -65,6 +65,37 @@ export default function UploadPage() {
     }
   };
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsSubmitting(true);
+
+  //   const data = new FormData();
+  //   data.append("old_name", formData.old_name);
+  //   data.append("new_name", formData.new_name);
+  //   data.append("description", formData.description);
+  //   data.append("next_redirect_url", formData.next_redirect_url);
+  //   data.append("theme", formData.theme);
+
+  //   formData.old_images.forEach((file) => data.append("old_images", file));
+  //   formData.new_images.forEach((file) => data.append("new_images", file));
+
+  //   try {
+  //     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  //     const res = await axios.post(`${baseUrl}/api/upload`, data, {
+  //       headers: { "Content-Type": "multipart/form-data" },
+  //     });
+  //     if (res.status === 200) {
+  //       const productId = res.data.id;
+  //       setSavedProductId(productId);
+  //     }
+  //   } catch (error) {
+  //     console.error("Upload error:", error);
+  //     alert("Upload failed. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -84,6 +115,7 @@ export default function UploadPage() {
       const res = await axios.post(`${baseUrl}/api/upload`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       if (res.status === 200) {
         const productId = res.data.id;
         setSavedProductId(productId);
