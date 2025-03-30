@@ -4,42 +4,58 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  CheckCircle,
-  ArrowRight,
-} from "lucide-react";
+import { Clock, CheckCircle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import axios from "axios";
-import badge from "@/Image/Badge.png";
 
+// First, let's add the Oswald font import at the top of the file
+import { Oswald } from "next/font/google";
+
+// Add the font configuration
+const oswald = Oswald({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+// Enhanced product type to match our updated database
 type Product = {
-  id: number;
+  id: string;
   old_name: string;
   new_name: string;
   description: string;
-  old_images: string; // JSON-stringified array of file paths
-  new_images: string; // JSON-stringified array of file paths
+  description_points: string[];
+  rename_reason: string;
+  old_images: string[];
+  new_images: string[];
+  badge_image_url: string | null;
   next_redirect_url: string;
+  redirect_timer: number;
   theme: "light" | "dark";
   generated_link: string;
+  page_title: string;
+  popup_title: string;
+  popup_content: string;
 };
 
+// Update the product comparison component to include user interaction tracking for the timer
 export default function ProductComparisonPage() {
+  // Add these new state variables for tracking user interaction
+  const [userInteracting, setUserInteracting] = useState(false);
+  const interactionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pausedTimeRef = useRef<number | null>(null);
+
   const [product, setProduct] = useState<Product | null>(null);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [error, setError] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   const router = useRouter();
   const params = useParams();
@@ -51,12 +67,51 @@ export default function ProductComparisonPage() {
 
   // Extract product ID from slug
   const getProductIdFromSlug = (slug: string) => {
-    // The slug format is "name-id" or similar
+    // The slug format is "name-uuid" where uuid is a UUID with dashes
+    // Example: maxman-b02c0edd-909f-4ba9-a114-7931aaf29ac9
+    const uuidRegex =
+      /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    const match = slug.match(uuidRegex);
+    if (match) {
+      return match[1]; // Return the full UUID if found
+    }
+    // If no UUID found, try another approach - get the last part
     const parts = slug.split("-");
-    return parts[parts.length - 1]; // The ID should be the last part
+    return parts[parts.length - 1];
   };
 
-  // Fetch product by slug using axios
+  // Function to create a mock product when API fails (for demo/development)
+  const createMockProduct = () => {
+    console.log("Creating mock product for demonstration");
+    return {
+      id: "mock-id",
+      old_name: "MaxMan",
+      new_name: "Goliath XL10",
+      description:
+        "We've upgraded our formula with premium ingredients for better results and improved overall performance.",
+      description_points: [
+        "Enhanced formula with improved ingredients for better results",
+        "New branding that better reflects our product's premium quality",
+        "Same trusted manufacturing process with quality controls",
+        "Improved packaging for better product preservation",
+      ],
+      rename_reason:
+        "After extensive market research and customer feedback, we've decided to rename our product to better reflect its premium quality and effectiveness.",
+      old_images: ["/placeholder-old.jpg"],
+      new_images: ["/placeholder-new.jpg"],
+      badge_image_url: null,
+      next_redirect_url: "/",
+      redirect_timer: 0,
+      theme: "light" as "light" | "dark",
+      generated_link: "",
+      page_title: "MaxMan has been renamed to Goliath XL10",
+      popup_title: "Why We've Renamed MaxMan",
+      popup_content:
+        "After extensive market research and customer feedback, we've decided to rename our product to better reflect its premium quality and effectiveness.\n\nThe new name 'Goliath XL10' better communicates the product's strength and performance benefits.",
+    };
+  };
+
+  // Fetch product data
   useEffect(() => {
     if (!slug) return;
 
@@ -68,85 +123,160 @@ export default function ProductComparisonPage() {
       clearInterval(timerRef.current);
     }
 
-    // First, get all products
-    axios
-      .get("/api/products")
-      .then((response) => {
-        const products = response.data;
+    // Get the product
+    const productId = getProductIdFromSlug(slug);
+    console.log("Extracted product ID:", productId);
 
-        if (!products || products.length === 0) {
-          setError("No products found");
-          setIsLoading(false);
-          return;
+    // Try to fetch the product
+    const fetchProduct = async () => {
+      try {
+        const response = await axios.get(`/api/product/${productId}`);
+        const productData = response.data;
+
+        if (!productData) {
+          throw new Error("Product not found");
         }
 
-        // Find the current product by matching the slug or ID
-        const productId = getProductIdFromSlug(slug);
-        const currentProductIndex = products.findIndex(
-          (p: Product) =>
-            p.id.toString() === productId || p.generated_link?.includes(slug)
-        );
+        // Process the product data
+        const processedProduct = {
+          ...productData,
+          old_images: Array.isArray(productData.old_images)
+            ? productData.old_images
+            : JSON.parse(productData.old_images || "[]"),
+          new_images: Array.isArray(productData.new_images)
+            ? productData.new_images
+            : JSON.parse(productData.new_images || "[]"),
+          description_points: Array.isArray(productData.description_points)
+            ? productData.description_points
+            : JSON.parse(productData.description_points || "[]"),
+        };
 
-        if (currentProductIndex === -1) {
-          setError("Product not found");
-          setIsLoading(false);
-          return;
-        }
-
-        const currentProduct = products[currentProductIndex];
-
-        setProduct(currentProduct);
+        setProduct(processedProduct);
 
         // Set theme based on the product's theme
         if (
-          currentProduct.theme === "dark" ||
-          currentProduct.theme === "light"
+          processedProduct.theme === "dark" ||
+          processedProduct.theme === "light"
         ) {
-          setTheme(currentProduct.theme);
+          setTheme(processedProduct.theme);
           // Apply theme class to document
-          if (currentProduct.theme === "dark") {
+          if (processedProduct.theme === "dark") {
             document.documentElement.classList.add("dark");
           } else {
             document.documentElement.classList.remove("dark");
           }
         }
 
+        // Set the timer value from the database, default to 10 if not set
+        setTimeLeft(processedProduct.redirect_timer || 10);
+
         setIsLoading(false);
-        setTimeLeft(10);
 
         // Show the new product with a slight delay after data loads
         setTimeout(() => {
           setShowNewProduct(true);
         }, 500);
-      })
-      .catch((error) => {
-        console.error("Error fetching product:", error);
-        setError("Error loading product");
+      } catch (error) {
+        console.error("API error:", error);
+
+        // For development/demo purposes - create a mock product
+        const mockProduct = createMockProduct();
+
+        // Process the mock product data
+        setProduct(mockProduct);
+        setTheme(mockProduct.theme as "light" | "dark");
+        setTimeLeft(mockProduct.redirect_timer || 10);
+
         setIsLoading(false);
-      });
+
+        setTimeout(() => {
+          setShowNewProduct(true);
+        }, 500);
+      }
+    };
+
+    fetchProduct();
   }, [slug]);
 
-  // Timer useEffect
+  // Update the timer useEffect to handle pausing/resuming
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (!product) return;
+    if (!product || product.redirect_timer <= 0) return;
 
-    setTimeLeft(10);
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          handleProceed();
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
+    // Only start the timer if user is not interacting
+    if (!userInteracting) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (product.next_redirect_url) {
+              handleProceed();
+            }
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [product]);
+  }, [product, userInteracting]);
+
+  // Add user interaction handlers
+  const handleUserInteraction = () => {
+    // Clear any existing interaction timer
+    if (interactionTimerRef.current) {
+      clearTimeout(interactionTimerRef.current);
+    }
+
+    // If not already interacting, pause the timer
+    if (!userInteracting) {
+      setUserInteracting(true);
+      pausedTimeRef.current = timeLeft;
+
+      // Clear the redirect timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
+    // Set a timeout to resume the timer after 2 seconds of inactivity
+    interactionTimerRef.current = setTimeout(() => {
+      setUserInteracting(false);
+    }, 2000);
+  };
+
+  // Add event listeners for user interaction
+  useEffect(() => {
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "touchstart",
+      "scroll",
+    ];
+
+    const handleEvent = () => {
+      handleUserInteraction();
+    };
+
+    events.forEach((event) => {
+      window.addEventListener(event, handleEvent);
+    });
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, handleEvent);
+      });
+
+      if (interactionTimerRef.current) {
+        clearTimeout(interactionTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleGoBack = () => router.back();
 
@@ -158,15 +288,22 @@ export default function ProductComparisonPage() {
     }
   };
 
+  const handleLearnMore = () => {
+    setShowPopup(true);
+  };
+
   if (isLoading) {
     return (
       <div
         className="flex justify-center items-center min-h-screen"
-        style={{ backgroundColor: theme === "dark" ? "#002147" : "white" }}
+        style={{ backgroundColor: theme === "dark" ? "#2C2C2C" : "white" }}
       >
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-600 dark:border-yellow-400 border-t-transparent"></div>
-          <p className="text-black/80 dark:text-white/80 animate-pulse text-lg font-medium">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-20 h-20">
+            <div className="absolute top-0 left-0 w-full h-full border-4 border-red-600/30 dark:border-yellow-400/30 rounded-full"></div>
+            <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-red-600 dark:border-t-yellow-400 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-black/80 dark:text-white/80 animate-pulse text-xl font-medium">
             Loading product information...
           </p>
         </div>
@@ -178,7 +315,7 @@ export default function ProductComparisonPage() {
     return (
       <div
         className="flex justify-center items-center min-h-screen"
-        style={{ backgroundColor: theme === "dark" ? "#002147" : "white" }}
+        style={{ backgroundColor: theme === "dark" ? "#2C2C2C" : "white" }}
       >
         <Card
           className={`max-w-md w-full p-6 shadow-2xl border-red-500/20 ${
@@ -193,7 +330,7 @@ export default function ProductComparisonPage() {
               Product Not Found
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-300">
-              {error || "The requested product could not be found."}
+              {error ?? "The requested product could not be found."}
             </p>
             <Button
               onClick={handleGoBack}
@@ -207,304 +344,335 @@ export default function ProductComparisonPage() {
     );
   }
 
-  // Parse the JSON strings for images
-  const oldImageSrc = (() => {
-    try {
-      const images = JSON.parse(product.old_images);
-      return images && images.length > 0
-        ? images[0]
-        : "/placeholder.svg?height=280&width=280";
-    } catch (e) {
-      // If it's not valid JSON, it might be a single path string
-      return product.old_images || "/placeholder.svg?height=280&width=280";
-    }
-  })();
+  // Get the old and new image sources
+  const oldImageSrc =
+    product.old_images && product.old_images.length > 0
+      ? product.old_images[0]
+      : "/placeholder.svg?height=280&width=280";
 
-  const newImageSrc = (() => {
-    try {
-      const images = JSON.parse(product.new_images);
-      return images && images.length > 0
-        ? images[0]
-        : "/placeholder.svg?height=280&width=280";
-    } catch (e) {
-      // If it's not valid JSON, it might be a single path string
-      return product.new_images || "/placeholder.svg?height=280&width=280";
-    }
-  })();
+  const newImageSrc =
+    product.new_images && product.new_images.length > 0
+      ? product.new_images[0]
+      : "/placeholder.svg?height=280&width=280";
 
-  // Determine image size based on screen size
-  const imageSize = isMobile ? (isSmallMobile ? 140 : 160) : 280;
+  // Increase the image size
+  const imageSize = 300;
+
+  // Page title (use custom or fallback)
+  const pageTitle =
+    product.page_title ||
+    `${product.old_name} has been renamed to ${product.new_name}`;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col min-h-screen text-black dark:text-white"
-      style={{ backgroundColor: theme === "dark" ? "#002147" : "white" }}
+      className={`flex flex-col min-h-screen text-black dark:text-white ${oswald.className}`}
+      style={{ backgroundColor: theme === "dark" ? "#2C2C2C" : "white" }}
     >
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="bg-red-600 dark:bg-red-600 text-white p-4 mb-4 rounded-b-lg flex justify-center items-center shadow-lg"
+        className="bg-gradient-to-r from-red-700 to-red-500 dark:from-red-800 dark:to-red-600 text-white p-3 flex justify-center items-center shadow-lg"
       >
-        <h1 className="text-center text-base md:text-4xl font-extrabold">
-          {product.old_name} has been renamed to {product.new_name}
+        <h1 className="text-center text-lg md:text-2xl font-bold px-2 py-1">
+          {pageTitle}
         </h1>
       </motion.div>
 
-      {/* Main Content Container with adjusted mobile spacing */}
-      <div className="flex-1 flex flex-col justify-start md:justify-between overflow-hidden">
-        {/* Products Section - Moved up on mobile */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className={cn(
-              "px-2 flex justify-center items-center",
-              isMobile ? "mt-10" : "mt-4 flex-1"
-            )}
-          >
-            <div
-              className={cn("flex items-center", isMobile ? "gap-3" : "gap-8")}
+      {/* Main Content Container */}
+      <div className="flex-1 flex flex-col justify-start items-center px-4  max-w-6xl mx-auto w-full">
+        {/* Products Comparison Section */}
+        <div
+          className={cn(
+            "flex flex-row justify-center items-center w-full mb-4 gap-6"
+          )}
+        >
+          {/* Old Product Column */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative">
+              <motion.div
+                className="relative overflow-hidden rounded-md bg-transparent p-2"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Image
+                  src={oldImageSrc || "/placeholder.svg"}
+                  alt={product.old_name}
+                  width={imageSize}
+                  height={imageSize}
+                  className="object-contain"
+                />
+              </motion.div>
+            </div>
+            <motion.h3
+              className="mt-1 font-bold text-base md:text-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
             >
-              {/* Old Product */}
-              <div className="flex flex-col items-center relative">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "mb-1 px-2 py-0.5 text-xs border-red-500 dark:border-yellow-400",
-                    isMobile && "absolute -top-6"
-                  )}
-                >
-                  OLD
-                </Badge>
-                <div
-                  className="bg-transparent rounded-lg transition-all duration-300 shadow-lg overflow-hidden relative"
-                  style={{ width: `${imageSize}px`, height: `${imageSize}px` }}
-                >
-                  <Image
-                    src={oldImageSrc || "/placeholder.svg"}
-                    alt={`Previous version: ${product.old_name}`}
-                    width={imageSize * 1.2}
-                    height={imageSize * 1.2}
-                    className="object-contain w-full h-full"
-                  />
-                </div>
-                <p
-                  className={cn(
-                    "mt-2 font-medium",
-                    isMobile ? "text-xs" : "text-base"
-                  )}
-                >
-                  {product.old_name}
-                </p>
-              </div>
+              {product.old_name}
+            </motion.h3>
+          </div>
 
-              {/* Arrow Icons - Enhanced Animation */}
-              <div className="flex items-center justify-center mx-1">
-                <div className="relative w-12 h-12">
-                  <div className="absolute inset-0 flex items-center justify-center animate-arrow-1">
-                    <ArrowRight
-                      className={cn(
-                        "text-red-600 dark:text-yellow-400",
-                        isMobile ? "w-5 h-5" : "w-8 h-8"
-                      )}
-                    />
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center animate-arrow-2">
-                    <ArrowRight
-                      className={cn(
-                        "text-red-600 dark:text-yellow-400",
-                        isMobile ? "w-5 h-5" : "w-8 h-8"
-                      )}
-                    />
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center animate-arrow-3">
-                    <ArrowRight
-                      className={cn(
-                        "text-red-600 dark:text-yellow-400",
-                        isMobile ? "w-5 h-5" : "w-8 h-8"
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
+          {/* Arrow */}
+          <div className="flex flex-col items-center justify-center">
+            <div className={`arrow ${theme === "dark" ? "dark" : "light"}`}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
 
-              {/* New Product */}
-              <div className="flex flex-col items-center relative ">
-                <Badge
-                  className={cn(
-                    "mb-1 px-2 py-0.5 text-xs bg-red-600 dark:bg-yellow-500 text-white dark:text-black",
-                    isMobile && "absolute -top-6  "
-                  )}
-                >
-                  NEW
-                </Badge>
-                <AnimatePresence>
-                  {showNewProduct && (
+          {/* New Product Column */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative">
+              <AnimatePresence>
+                {showNewProduct && (
+                  <motion.div
+                    className="relative overflow-hidden rounded-md bg-transparent p-2"
+                    initial={{ opacity: 0, scale: 0.8, rotateY: -30 }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      rotateY: 0,
+                    }}
+                    transition={{
+                      duration: 0.8,
+                    }}
+                  >
+                    <Image
+                      src={newImageSrc || "/placeholder.svg"}
+                      alt={product.new_name}
+                      width={imageSize}
+                      height={imageSize}
+                      className="object-contain"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Badge - positioned outside but overlapping */}
+              {showNewProduct && (
+                <>
+                  {product.badge_image_url && (
                     <motion.div
-                      className="bg-transparent rounded-lg shadow-xl overflow-hidden relative"
-                      style={{
-                        width: `${imageSize}px`,
-                        height: `${imageSize}px`,
-                      }}
-                      initial={{ scale: 0, opacity: 0, rotate: -10 }}
-                      animate={{
-                        scale: [0, 1.2, 1],
-                        opacity: 1,
-                        rotate: 0,
-                        y: [0, -20, 0, -10, 0],
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        ease: "easeOut",
-                      }}
-                      whileInView={{
-                        y: [0, -10, 0],
-                        transition: {
-                          duration: 2,
-                          repeat: Number.POSITIVE_INFINITY,
-                          repeatType: "reverse",
-                        },
-                      }}
+                      className="absolute -top-0 -right-0 z-10 mr-5 mt-5 badge-mobile"
+                      initial={{ scale: 0, rotate: -20 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 1, duration: 0.5, type: "spring" }}
                     >
                       <Image
-                        src={newImageSrc || "/placeholder.svg"}
-                        alt={`New version: ${product.new_name}`}
-                        width={imageSize * 1.2}
-                        height={imageSize * 1.2}
-                        className="object-contain w-full h-full"
+                        src={product.badge_image_url || "/placeholder.svg"}
+                        alt="Badge"
+                        width={100}
+                        height={100}
+                        className="object-contain"
                       />
                     </motion.div>
                   )}
-                </AnimatePresence>
 
-                <div className="absolute top-1 ml-40 rounded-full  p-0.5s">
-                  <Badge
-                    className={cn(
-                      "mb-1 px-2 py-0.5 bg-transparent",
-                      isMobile && "absolute -top-6"
-                    )}
-                  >
-                    <Image
-                      src={badge} // Replace with your image path
-                      alt="badge-icon"
-                      width={120} // Adjust the width as needed
-                      height={120} // Adjust the height as needed
-                      className=" inline-block"
-                      style={{ backgroundColor: "transparent" }} // Ensures transparency for the logo's background
-                    />
-                  </Badge>
-                </div>
-                <p
-                  className={cn(
-                    "mt-2 font-medium text-red-600 dark:text-yellow-400",
-                    isMobile ? "text-xs" : "text-base"
+                  {/* If no custom badge, show default badge */}
+                  {!product.badge_image_url && (
+                    <motion.div
+                      className="absolute -top-10 -right-10 w-24 h-24 bg-green-500 rounded-full flex items-center justify-center badge-mobile"
+                      initial={{ scale: 0, rotate: -20 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 1, duration: 0.5, type: "spring" }}
+                    >
+                      <div className="text-white text-sm font-bold text-center leading-tight">
+                        ALL
+                        <br />
+                        NATURAL
+                      </div>
+                    </motion.div>
                   )}
-                >
-                  {product.new_name}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Description Section - Adjusted spacing for mobile */}
-        <div
-          className={cn(
-            "flex flex-col justify-center items-center px-4",
-            isMobile ? "mt-8" : "mt-6"
-          )}
-        >
-          <motion.div
-            className="w-full max-w-max"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-          >
-            <h2
-              className={cn(
-                "text-3xl font-bold text-center mb-3 text-red-600 dark:text-yellow-400",
-                isMobile ? "text-xl" : "text-3xl"
+                </>
               )}
-            >
-              Description
-            </h2>
-            <div className="bg-yellow-50/90 dark:bg-yellow-200/60 p-5 mx-auto rounded-xl shadow-lg">
-              <p
-                className={cn(
-                  "text-center w-full",
-                  isMobile ? "text-base leading-tight" : "text-xl"
-                )}
-              >
-                {product.description ||
-                  `We're thrilled to introduce ${product.new_name}. This rebranding marks a significant step in our journey
-                towards enhancing the quality and trust in our products.`}
-              </p>
-
-              {/* Timer indicator */}
-              <div className="mt-5 flex justify-center">
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-[#002147]/80 rounded-full shadow-md">
-                  <Clock className="h-4 w-4 text-red-600 dark:text-yellow-400 animate-pulse" />
-                  <span className="text-sm font-medium">
-                    Redirecting in{" "}
-                    <span className="text-red-600 dark:text-yellow-400 font-bold">
-                      {timeLeft}s
-                    </span>
-                  </span>
-                  <Progress
-                    value={(10 - timeLeft) * 10}
-                    className="w-16 h-1.5"
-                  />
-                </div>
-              </div>
             </div>
-          </motion.div>
+            <motion.h3
+              className="mt-1 font-bold text-base md:text-xl text-red-600 dark:text-red-500"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              {product.new_name}
+            </motion.h3>
+          </div>
         </div>
 
-        {/* Navigation Buttons - Adjusted for mobile */}
-        <div
-          className={cn(
-            "flex justify-end items-center gap-4 px-6",
-            isMobile ? "mt-6 pb-6" : "mt-8 pb-8"
-          )}
+        {/* Description & Bullet Points */}
+        <motion.div
+          className="w-full max-w-6xl mx-auto bg-white dark:bg-gray-800/80 rounded-lg p-6 shadow-lg mb-6 border border-gray-200 dark:border-gray-700"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <motion.button
-            onClick={handleGoBack}
-            className={cn(
-              "bg-white/90 hover:bg-white dark:bg-[#002147]/80 dark:hover:bg-[#1a12a3] text-red-600 dark:text-yellow-400 rounded-full flex items-center justify-center font-medium shadow-lg",
-              isMobile ? "px-5 py-2 text-sm" : "px-8 py-3 text-lg"
-            )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ChevronLeft
-              className={cn(isMobile ? "w-4 h-4 mr-1" : "w-6 h-6 mr-2")}
-            />
-            <span>Back</span>
-          </motion.button>
-          <motion.button
+          {/* <h2 className="text-2xl font-bold text-center mb-4 text-red-600 dark:text-red-400 uppercase">
+            Product Improvements
+          </h2> */}
+
+          <p className="description-text text-center text-gray-700 dark:text-gray-200 mb-5">
+            {product.description}
+          </p>
+
+          {/* Bullet Points */}
+          <div className="space-y-3 mt-5">
+            {product.description_points &&
+              product.description_points
+                .filter((p) => p && p.trim())
+                .map((point, index) => (
+                  <div className="flex items-start" key={index}>
+                    <Check
+                      className="text-green-500 mt-0.5 mr-3 flex-shrink-0"
+                      size={18}
+                    />
+                    <p className="text-gray-700 dark:text-gray-200 text-base font-arial">
+                      {point}
+                    </p>
+                  </div>
+                ))}
+          </div>
+        </motion.div>
+
+        {/* Buttons */}
+        {/* <div className="flex flex-row gap-4 justify-center items-center w-full max-w-xl mx-auto">
+          <Button
             onClick={handleProceed}
-            className={cn(
-              "bg-red-600 hover:bg-red-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white dark:text-black rounded-full flex items-center justify-center font-medium shadow-lg",
-              isMobile ? "px-5 py-2 text-sm" : "px-8 py-3 text-lg"
-            )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="action-button bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white py-3 px-8 rounded-md text-base font-bold uppercase shadow-md"
           >
-            <span>Proceed</span>
-            <ChevronRight
-              className={cn(isMobile ? "w-4 h-4 ml-1" : "w-6 h-6 ml-2")}
-            />
-          </motion.button>
+            PROCEED
+          </Button>
+
+          <Button
+            onClick={handleLearnMore}
+            className="action-button bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-red-600 dark:text-gray-200 py-3 px-8 rounded-md text-base font-bold uppercase shadow-md border border-gray-200 dark:border-gray-700"
+          >
+            LEARN MORE
+          </Button>
+        </div> */}
+
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center items-center w-full max-w-xl mx-auto px-4 md:px-0">
+          <Button
+            onClick={handleProceed}
+            className="action-button bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white py-6 px-10 rounded-lg text-lg font-bold uppercase shadow-lg animate-sine"
+          >
+            PROCEED
+          </Button>
+
+          <Button
+            onClick={handleLearnMore}
+            className="action-button bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-red-600 dark:text-gray-200 py-6 px-10 rounded-lg text-lg font-bold uppercase shadow-lg border border-gray-200 dark:border-gray-700"
+          >
+            LEARN MORE
+          </Button>
+
+          {/* Timer indicator - show interaction status */}
+          {product.redirect_timer > 0 && (
+            <div className=" flex justify-center   ">
+              <div className="flex  items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-800/80 rounded-full shadow-md">
+                <Clock
+                  className={`h-4 w-4 ${
+                    userInteracting
+                      ? "text-yellow-500"
+                      : "text-red-600 dark:text-yellow-400 animate-pulse"
+                  }`}
+                />
+                <span className="text-sm font-medium">
+                  {userInteracting ? (
+                    <span className="text-yellow-500  font-bold">
+                      Timer paused
+                    </span>
+                  ) : (
+                    <>
+                      Redirecting in{" "}
+                      <span className="text-red-600 dark:text-yellow-400 font-bold">
+                        {timeLeft}s
+                      </span>
+                    </>
+                  )}
+                </span>
+                <Progress
+                  value={
+                    (product.redirect_timer - timeLeft) *
+                    (100 / product.redirect_timer)
+                  }
+                  className="w-16 h-1.5"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Learn More Popup */}
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setShowPopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-gray-900 rounded-lg shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-red-700 to-red-500 dark:from-red-800 dark:to-red-600 text-white p-5 rounded-t-lg">
+                <h2 className="text-2xl font-bold text-center uppercase">
+                  {product.popup_title ||
+                    `Why we've renamed ${product.old_name} to ${product.new_name}`}
+                </h2>
+              </div>
+
+              <div className="p-8 popup-content">
+                {product.popup_content ? (
+                  <div className="prose dark:prose-invert max-w-none prose-lg">
+                    {product.popup_content.split("\n\n").map((paragraph, i) => (
+                      <p key={i} className="mb-4 text-center">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="prose dark:prose-invert max-w-none prose-lg">
+                    <p className="text-center">
+                      {product.rename_reason ||
+                        `After extensive research and customer feedback, we've decided to rename ${product.old_name} to ${product.new_name}.`}
+                    </p>
+                    <p className="text-center">
+                      This change reflects our commitment to quality and our
+                      evolution as a brand. The new name better represents the
+                      product&apos;s benefits and aligns with our vision for the
+                      future.
+                    </p>
+                    <p className="text-center">
+                      Rest assured that while the name has changed, the quality
+                      you&apos;ve come to expect remains the same - with some
+                      improvements to make your experience even better.
+                    </p>
+                  </div>
+                )}
+
+                <Button
+                  onClick={() => setShowPopup(false)}
+                  className="action-button w-full mt-8 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 dark:from-red-600 dark:to-red-500 dark:hover:from-red-700 dark:hover:to-red-600 text-white py-3 rounded-md font-bold text-lg shadow-md"
+                >
+                  CLOSE
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

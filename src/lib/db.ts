@@ -5,11 +5,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const db = mysql.createPool({
-  host: process.env.HOST_NAME || "",
-  port: 11473,
-  user: process.env.USERDB || "",
-  password: process.env.PASSWORDDB || "",
-  database: process.env.DATABASE || "",
+  host: process.env.HOST_NAME ?? "",
+  port: parseInt(process.env.DB_PORT ?? '3306', 10),
+  user: process.env.USERDB ?? "",
+  password: process.env.PASSWORDDB ?? "",
+  database: process.env.DATABASE ?? "",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
