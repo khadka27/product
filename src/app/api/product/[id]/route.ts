@@ -230,14 +230,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
+type Params = {
+  params: {
+    id: string;
+  };
+};
+
 // ✅ GET: Fetch a product by ID.
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Params
 ): Promise<NextResponse> {
   try {
     // Extract the product ID from the params
-    const id = params.id;
+    const id = context.params.id;
 
     // Extract the full UUID if we have a partial ID
     let productId = id;
@@ -309,10 +315,10 @@ export async function GET(
 // ✅ PUT: Update a product by ID.
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Params
 ): Promise<NextResponse> {
   try {
-    const id = params.id;
+    const id = context.params.id;
 
     // Use formData() because the request payload is multipart/form-data.
     const formData = await request.formData();
@@ -431,10 +437,10 @@ export async function PUT(
 // ✅ DELETE: Remove a product by ID.
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Params
 ): Promise<NextResponse> {
   try {
-    const id = params.id;
+    const id = context.params.id;
 
     await db.query("DELETE FROM products WHERE id = ?", [id]);
 
