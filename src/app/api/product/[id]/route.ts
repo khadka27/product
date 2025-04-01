@@ -227,23 +227,18 @@
 // }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import db from "@/lib/db";
-
-type Params = {
-  params: {
-    id: string;
-  };
-};
 
 // ✅ GET: Fetch a product by ID.
 export async function GET(
-  request: NextRequest,
-  context: Params
+  request: Request,
+  context: { params: { id: string } }
 ): Promise<NextResponse> {
+  const { params } = context;
   try {
     // Extract the product ID from the params
-    const id = context.params.id;
+    const id = params.id;
 
     // Extract the full UUID if we have a partial ID
     let productId = id;
@@ -314,11 +309,12 @@ export async function GET(
 
 // ✅ PUT: Update a product by ID.
 export async function PUT(
-  request: NextRequest,
-  context: Params
+  request: Request,
+  context: { params: { id: string } }
 ): Promise<NextResponse> {
+  const { params } = context;
   try {
-    const id = context.params.id;
+    const id = params.id;
 
     // Use formData() because the request payload is multipart/form-data.
     const formData = await request.formData();
@@ -436,11 +432,12 @@ export async function PUT(
 
 // ✅ DELETE: Remove a product by ID.
 export async function DELETE(
-  request: NextRequest,
-  context: Params
+  request: Request,
+  context: { params: { id: string } }
 ): Promise<NextResponse> {
+  const { params } = context;
   try {
-    const id = context.params.id;
+    const id = params.id;
 
     await db.query("DELETE FROM products WHERE id = ?", [id]);
 
