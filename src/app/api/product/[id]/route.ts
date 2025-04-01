@@ -233,13 +233,10 @@ import db from "@/lib/db";
 // ✅ GET: Fetch a product by ID.
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const { params } = context;
+  const { id } = await context.params;
   try {
-    // Extract the product ID from the params
-    const id = params.id;
-
     // Extract the full UUID if we have a partial ID
     let productId = id;
 
@@ -310,12 +307,10 @@ export async function GET(
 // ✅ PUT: Update a product by ID.
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const { params } = context;
+  const { id } = await context.params;
   try {
-    const id = params.id;
-
     // Use formData() because the request payload is multipart/form-data.
     const formData = await request.formData();
     const old_name = formData.get("old_name") as string;
@@ -433,12 +428,10 @@ export async function PUT(
 // ✅ DELETE: Remove a product by ID.
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  const { params } = context;
+  const { id } = await context.params;
   try {
-    const id = params.id;
-
     await db.query("DELETE FROM products WHERE id = ?", [id]);
 
     return NextResponse.json({
