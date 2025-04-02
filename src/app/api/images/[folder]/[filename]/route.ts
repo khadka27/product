@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 
-// Define the same upload directory getter function
+// Define the upload directory getter function
 const getUploadDir = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return isProduction
@@ -10,13 +10,13 @@ const getUploadDir = () => {
     : path.join(process.cwd(), "public", "uploads");
 };
 
-// Destructure params directly in the function signature
+// Use a single context parameter and destructure it inside the function
 export async function GET(
   request: Request,
-  {
-    params: { folder, filename },
-  }: { params: { folder: string; filename: string } }
+  context: { params: Record<string, string> }
 ): Promise<NextResponse> {
+  const { folder, filename } = context.params;
+
   // Security check to prevent directory traversal attacks
   if (folder.includes("..") || filename.includes("..")) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
