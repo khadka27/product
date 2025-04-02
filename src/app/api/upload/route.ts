@@ -339,6 +339,7 @@
 import { NextResponse } from "next/server";
 import { initializeDatabase, insertProduct } from "@/lib/models";
 import db from "@/lib/db";
+import fs from "fs";
 import path from "path";
 import { writeFile, mkdir } from "fs/promises";
 
@@ -361,113 +362,83 @@ const getUploadDir = () => {
 };
 
 // Function to ensure directory exists
-async function ensureDir(dirPath: string): Promise<void> {
+async function ensureDir(dirPath: string) {
   try {
     await mkdir(dirPath, { recursive: true });
-  } catch (error: any) {
-    if (error.code !== "EEXIST") {
+  } catch (error) {
+    if ((error as any).code !== "EEXIST") {
       throw error;
     }
   }
 }
 
 // Function to save file to storage
-interface FileWithArrayBuffer extends File {
-  arrayBuffer(): Promise<ArrayBuffer>;
-}
-
-async function saveFile(
-  file: FileWithArrayBuffer,
-  folderName: string
-): Promise<string> {
+async function saveFile(file: File, folderName: string) {
   // Get base upload directory
-  const baseUploadDir: string = getUploadDir();
+  const baseUploadDir = getUploadDir();
 
   // Create specific folder path
-  const folderPath: string = path.join(baseUploadDir, folderName);
+  const folderPath = path.join(baseUploadDir, folderName);
 
   // Ensure the directory exists
   await ensureDir(folderPath);
 
   // Generate unique filename
-  const fileExtension: string | undefined = file.name.split(".").pop();
-  const fileName: string = `${Date.now()}_${Math.random()
+  const fileExtension = file.name.split(".").pop();
+  const fileName = `${Date.now()}_${Math.random()
     .toString(36)
     .substring(2, 15)}.${fileExtension}`;
-  const filePath: string = path.join(folderPath, fileName);
+  const filePath = path.join(folderPath, fileName);
 
   // Get file buffer and write to disk
-  const buffer: Buffer = Buffer.from(await file.arrayBuffer());
+  const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(filePath, buffer);
 
   // Store the relative path plus the configured BASE_URL for database
-  const baseUrl: string = process.env.NEXT_PUBLIC_BASE_URL || "";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
   return `${baseUrl}/api/images/${folderName}/${fileName}`;
 }
 
-interface FormDataFields {
-  old_name: string;
-  new_name: string;
-  description: string;
-  nextRedirectUrl: string;
-  theme: string;
-  rename_reason: string;
-  metadata: Record<string, any>;
-  description_points: string[];
-  page_title: string;
-  meta_description: string;
-  seo_title: string;
-  popup_title: string;
-  popup_content: string;
-  redirectTimer: number;
-  oldImages: string[];
-  newImages: string[];
-  badgeImageUrl: string | null;
-}
-
-export async function POST(req: Request): Promise<Response> {
+export async function POST(req: Request) {
   await initializeDatabase();
 
   const formData = await req.formData();
 
   // Basic fields
-  const old_name: string = (formData.get("old_name") as string) || "";
-  const new_name: string = (formData.get("new_name") as string) || "";
-  const description: string = (formData.get("description") as string) || "";
-  const nextRedirectUrl: string =
-    (formData.get("next_redirect_url") as string) || "";
-  const theme: string = (formData.get("theme") as string) || "";
+  const old_name = formData.get("old_name") || "";
+  const new_name = formData.get("new_name") || "";
+  const description = formData.get("description") || "";
+  const nextRedirectUrl = formData.get("next_redirect_url") || "";
+  const theme = formData.get("theme") || "";
 
   // New fields from original request
-  const rename_reason: string = (formData.get("rename_reason") as string) || "";
-  let metadata: Record<string, any> = {};
+  const rename_reason = formData.get("rename_reason") || "";
+  let metadata = {};
   try {
-    const metadataStr: string | null = formData.get("metadata") as string;
+    const metadataStr = formData.get("metadata");
     if (metadataStr) {
-      metadata = JSON.parse(metadataStr);
+      metadata = JSON.parse(metadataStr as string);
     }
   } catch (e) {
     console.error("Error parsing metadata JSON:", e);
   }
 
   // Handle description points (max 4)
-  const description_points: string[] = [];
+  const description_points = [];
   for (let i = 1; i <= 4; i++) {
-    const point: string | null = formData.get(
-      `description_point_${i}`
-    ) as string;
-    if (point && point.trim()) {
-      description_points.push(point.trim());
+    const point = formData.get(`description_point_${i}`);
+    if (typeof point === "string" && point?.trim()) {
+      if (typeof point === "string") {
+        description_points.push(point.trim());
+      }
     }
   }
 
   // Alternative way to get description points if submitted as JSON
   try {
-    const pointsJson: string | null = formData.get(
-      "description_points"
-    ) as string;
+    const pointsJson = formData.get("description_points");
     if (pointsJson) {
-      const parsed: unknown = JSON.parse(pointsJson);
+      const parsed = JSON.parse(typeof pointsJson === "string" ? pointsJson : "[]");
       if (Array.isArray(parsed)) {
         // Only take up to 4 points
         description_points.splice(
@@ -483,27 +454,22 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   // SEO fields from new request
-  const page_title: string = (formData.get("page_title") as string) || "";
-  const meta_description: string =
-    (formData.get("meta_description") as string) || "";
-  const seo_title: string = (formData.get("seo_title") as string) || "";
+  const page_title = formData.get("page_title") || "";
+  const meta_description = formData.get("meta_description") || "";
+  const seo_title = formData.get("seo_title") || "";
 
   // Popup content fields from new request
-  const popup_title: string = (formData.get("popup_title") as string) || "";
-  const popup_content: string = (formData.get("popup_content") as string) || "";
+  const popup_title = formData.get("popup_title") || "";
+  const popup_content = formData.get("popup_content") || "";
 
   // Redirect timer
-  const redirectTimerStr: string | null = formData.get(
-    "redirect_timer"
-  ) as string;
-  const redirectTimer: number = redirectTimerStr
-    ? parseInt(redirectTimerStr, 10)
-    : 0;
+  const redirectTimerStr = formData.get("redirect_timer");
+  const redirectTimer = redirectTimerStr ? parseInt(redirectTimerStr as string, 10) : 0;
 
   // Image collections
-  const oldImages: string[] = [];
-  const newImages: string[] = [];
-  let badgeImageUrl: string | null = null;
+  const oldImages = [];
+  const newImages = [];
+  let badgeImageUrl = null;
 
   // Upload files to storage folders
   for (const entry of formData.entries()) {
@@ -511,13 +477,13 @@ export async function POST(req: Request): Promise<Response> {
     if (value instanceof File) {
       try {
         if (key === "old_images") {
-          const imagePath: string = await saveFile(value, "old_images");
+          const imagePath = await saveFile(value, "old_images");
           oldImages.push(imagePath);
         } else if (key === "new_images") {
-          const imagePath: string = await saveFile(value, "new_images");
+          const imagePath = await saveFile(value, "new_images");
           newImages.push(imagePath);
         } else if (key === "badge_image") {
-          const imagePath: string = await saveFile(value, "badge_images");
+          const imagePath = await saveFile(value, "badge_images");
           badgeImageUrl = imagePath;
         }
       } catch (error) {
@@ -534,34 +500,47 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   try {
-    const { id: idString }: { id: string } = await insertProduct(
-      old_name,
-      new_name,
-      description,
+    // Call the insertProduct function - it returns { result, id }
+    const response = await insertProduct(
+      old_name as string,
+      new_name as string,
+      description as string,
       description_points,
       metadata,
-      rename_reason,
+      rename_reason as string,
       oldImages,
       newImages,
       badgeImageUrl,
-      nextRedirectUrl,
+      nextRedirectUrl as string,
       redirectTimer,
-      theme,
+      theme as string,
       "", // generatedLink (will be updated after)
-      page_title,
-      meta_description,
-      seo_title,
-      popup_title,
-      popup_content
+      page_title as string,
+      meta_description as string,
+      seo_title as string,
+      popup_title as string,
+      popup_content as string
     );
-    const id: number = parseInt(idString, 10);
+
+    console.log("Insert response:", response);
+
+    // Get the UUID from the response
+    const id = response.id;
+
+    // Validate the ID
+    if (!id) {
+      console.error("Invalid ID returned:", response);
+      throw new Error("Failed to get valid product ID from database");
+    }
 
     // Generate a slug-based URL
-    const slug: string = old_name.toLowerCase().trim().replace(/\s+/g, "-");
-    const siteUrl: string =
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const cleanSiteUrl: string = siteUrl.replace(/\/$/, "");
-    const generatedLink: string = `${cleanSiteUrl}/product/${slug}-${id}`;
+    const slug = (old_name as string).toLowerCase().trim().replace(/\s+/g, "-");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const cleanSiteUrl = siteUrl.replace(/\/$/, "");
+    const generatedLink = `${cleanSiteUrl}/product/${slug}-${id}`;
+
+    console.log("Generated link:", generatedLink);
+    console.log("Product ID:", id);
 
     // Update the product with the generated link
     await db.query("UPDATE products SET generated_link = ? WHERE id = ?", [
@@ -582,11 +561,11 @@ export async function POST(req: Request): Promise<Response> {
       newImagesCount: newImages.length,
       hasBadge: badgeImageUrl !== null,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating product:", error);
     return NextResponse.json(
       {
-        error: error.message || "Unknown error",
+        error: (error instanceof Error ? error.message : "Unknown error"),
         details: "Failed to create product",
       },
       { status: 500 }

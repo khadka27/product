@@ -1,7 +1,17 @@
-// File: app/api/images/[folder]/[filename]/route.ts
 import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
+
+// Define the same upload directory getter function
+const getUploadDir = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction) {
+    return process.env.UPLOAD_DIR || "/tmp/uploads";
+  } else {
+    return path.join(process.cwd(), "public", "uploads");
+  }
+};
 
 export async function GET(
   req: Request,
@@ -21,12 +31,10 @@ export async function GET(
   }
 
   try {
-    // Get the path to the image based on environment
-    const isProduction = process.env.NODE_ENV === "production";
-    const baseDir = isProduction
-      ? process.env.UPLOAD_DIR || "/tmp/uploads"
-      : path.join(process.cwd(), "public", "uploads");
+    // Get the base upload directory
+    const baseDir = getUploadDir();
 
+    // Full path to the requested file
     const filePath = path.join(baseDir, folder, filename);
 
     // Read the file
