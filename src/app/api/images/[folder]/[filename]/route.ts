@@ -1,24 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 
 // Define the same upload directory getter function
 const getUploadDir = () => {
   const isProduction = process.env.NODE_ENV === "production";
-
   if (isProduction) {
-    return process.env.UPLOAD_DIR ?? "/tmp/uploads";
+    return process.env.UPLOAD_DIR || "/tmp/uploads";
   } else {
     return path.join(process.cwd(), "public", "uploads");
   }
 };
 
-// Updated type definition to match Next.js App Router requirements
+// Fixed type definition based on the reference code
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { folder: string; filename: string } }
-) {
-  const { folder, filename } = params;
+  request: Request,
+  context: { params: { folder: string; filename: string } }
+): Promise<NextResponse> {
+  const { folder, filename } = context.params;
 
   // Security check to prevent directory traversal attacks
   if (folder.includes("..") || filename.includes("..")) {
