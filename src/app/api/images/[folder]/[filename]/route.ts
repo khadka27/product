@@ -5,20 +5,18 @@ import path from "path";
 // Define the same upload directory getter function
 const getUploadDir = () => {
   const isProduction = process.env.NODE_ENV === "production";
-  if (isProduction) {
-    return process.env.UPLOAD_DIR || "/tmp/uploads";
-  } else {
-    return path.join(process.cwd(), "public", "uploads");
-  }
+  return isProduction
+    ? process.env.UPLOAD_DIR || "/tmp/uploads"
+    : path.join(process.cwd(), "public", "uploads");
 };
 
-// Fixed type definition based on the reference code
+// Destructure params directly in the function signature
 export async function GET(
   request: Request,
-  context: { params: { folder: string; filename: string } }
+  {
+    params: { folder, filename },
+  }: { params: { folder: string; filename: string } }
 ): Promise<NextResponse> {
-  const { folder, filename } = context.params;
-
   // Security check to prevent directory traversal attacks
   if (folder.includes("..") || filename.includes("..")) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
