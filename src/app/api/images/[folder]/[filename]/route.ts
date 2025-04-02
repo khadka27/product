@@ -6,15 +6,16 @@ import path from "path";
 const getUploadDir = () => {
   const isProduction = process.env.NODE_ENV === "production";
   return isProduction
-    ? process.env.UPLOAD_DIR || "/tmp/uploads"
+    ? process.env.UPLOAD_DIR ?? "/tmp/uploads"
     : path.join(process.cwd(), "public", "uploads");
 };
 
 export async function GET(
   request: Request,
-  context: { params: { folder: string; filename: string } }
+  context: { params: Promise<{ folder: string; filename: string }> }
 ): Promise<NextResponse> {
-  const { folder, filename } = context.params;
+  // Await the dynamic route params
+  const { folder, filename } = await context.params;
 
   // Security check to prevent directory traversal attacks
   if (folder.includes("..") || filename.includes("..")) {
