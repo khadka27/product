@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -7,14 +7,15 @@ const getUploadDir = () => {
   const isProduction = process.env.NODE_ENV === "production";
 
   if (isProduction) {
-    return process.env.UPLOAD_DIR || "/tmp/uploads";
+    return process.env.UPLOAD_DIR ?? "/tmp/uploads";
   } else {
     return path.join(process.cwd(), "public", "uploads");
   }
 };
 
+// Updated type definition to match Next.js App Router requirements
 export async function GET(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { folder: string; filename: string } }
 ) {
   const { folder, filename } = params;
