@@ -10,10 +10,9 @@ const getUploadDir = () => {
     : path.join(process.cwd(), "public", "uploads");
 };
 
-// Use a single context parameter and destructure it inside the function
 export async function GET(
   request: Request,
-  context: { params: Record<string, string> }
+  context: { params: { folder: string; filename: string } }
 ): Promise<NextResponse> {
   const { folder, filename } = context.params;
 
