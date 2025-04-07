@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import { Clock, CheckCircle, Check } from "lucide-react";
+import { Clock, CheckCircle, Check, CircleCheckBig } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -376,9 +376,9 @@ export default function ProductComparisonPage() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="bg-gradient-to-r from-red-700 to-red-500 dark:from-red-800 dark:to-red-600 text-white p-3 flex justify-center items-center shadow-lg"
+        className="bg-gradient-to-r from-red-700 to-red-500 dark:from-red-800 dark:to-red-600 text-white  flex justify-center items-center shadow-lg"
       >
-        <h1 className="text-center text-lg md:text-2xl font-bold px-2 py-1">
+        <h1 className="text-center text-lg md:text-2xl font-bold px-2 py-1               ">
           {pageTitle}
         </h1>
       </motion.div>
@@ -516,7 +516,7 @@ export default function ProductComparisonPage() {
             Product Improvements
           </h2> */}
 
-          <p className="description-text text-center text-gray-700 dark:text-gray-200 mb-5">
+          <p className="description-text text-left text-gray-700 dark:text-gray-200 mb-5">
             {product.description}
           </p>
 
@@ -527,11 +527,11 @@ export default function ProductComparisonPage() {
                 .filter((p) => p && p.trim())
                 .map((point, index) => (
                   <div className="flex items-start" key={index}>
-                    <Check
+                    <CircleCheckBig
                       className="text-green-500 mt-0.5 mr-3 flex-shrink-0"
                       size={18}
                     />
-                    <p className="text-gray-700 dark:text-gray-200 text-base font-arial">
+                    <p className="text-gray-700 dark:text-gray-200 text-[0.90rem] font-arial">
                       {point}
                     </p>
                   </div>
@@ -627,10 +627,10 @@ export default function ProductComparisonPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="bg-gradient-to-r from-red-700 to-red-500 dark:from-red-800 dark:to-red-600 text-white p-5 rounded-t-lg">
-                <h2 className="text-2xl font-bold text-center uppercase">
+                <h4 className="text-2xl font-bold text-center uppercase">
                   {product.popup_title ||
                     `Why we've renamed ${product.old_name} to ${product.new_name}`}
-                </h2>
+                </h4>
               </div>
 
               <div className="p-8 popup-content">

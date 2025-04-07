@@ -131,7 +131,7 @@ p {
 
 .description-text {
   font-family: Arial, sans-serif;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   line-height: 1.6;
   letter-spacing: 0.01em;
 }
@@ -146,15 +146,15 @@ p {
 
 @media (max-width: 768px) {
   h1 {
-    font-size: 1rem;
+    font-size: 1.8rem;
   }
 
   h2 {
-    font-size: 1.75rem;
+    font-size: 0.5rem;
   }
 
   h3 {
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
 }
 
