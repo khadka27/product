@@ -22,94 +22,23 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled }) => {
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-md py-2" : "bg-transparent py-4"
+        isScrolled ? "bg-white shadow-md py-2" : "bg-white py-4"
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <div className="relative h-10 w-40">
-              <Image
-                src={
-                  isScrolled
-                    ? "/images/logo-dark.svg"
-                    : "/images/logo-light.svg"
-                }
-                alt="HealthPaySecure"
-                fill
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src={"/images/healthpaysecure.png"}
+              alt="HealthPaySecure"
+              className="object-contain"
+              width={200}
+              height={200}
+            />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <div className="relative group">
-              <button
-                className={`flex items-center space-x-1 ${
-                  isScrolled ? "text-gray-800" : "text-white"
-                } hover:text-blue-400 transition-colors`}
-              >
-                <span>Solutions</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-              <div className="absolute left-0 mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
-                <div className="bg-white rounded-lg shadow-xl p-4 border border-gray-100">
-                  <Link
-                    href="/solutions/providers"
-                    className="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-700 rounded-md"
-                  >
-                    For Healthcare Providers
-                  </Link>
-                  <Link
-                    href="/solutions/patients"
-                    className="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-700 rounded-md"
-                  >
-                    For Patients
-                  </Link>
-                  <Link
-                    href="/solutions/insurance"
-                    className="block px-4 py-2 text-gray-800 hover:bg-blue-50 hover:text-blue-700 rounded-md"
-                  >
-                    For Insurance Companies
-                  </Link>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/features"
-              className={`${
-                isScrolled ? "text-gray-800" : "text-white"
-              } hover:text-blue-400 transition-colors`}
-            >
-              Features
-            </Link>
-            <Link
-              href="/pricing"
-              className={`${
-                isScrolled ? "text-gray-800" : "text-white"
-              } hover:text-blue-400 transition-colors`}
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/about"
-              className={`${
-                isScrolled ? "text-gray-800" : "text-white"
-              } hover:text-blue-400 transition-colors`}
-            >
-              About Us
-            </Link>
-            <Link
-              href="/contact"
-              className={`${
-                isScrolled ? "text-gray-800" : "text-white"
-              } hover:text-blue-400 transition-colors`}
-            >
-              Contact
-            </Link>
-          </nav>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
@@ -117,7 +46,7 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled }) => {
               className={
                 isScrolled
                   ? "bg-blue-700 text-white hover:bg-blue-800"
-                  : "bg-white text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                  : "bg-blue-700 text-white hover:bg-blue-50 hover:text-blue-800"
               }
             >
               Get Started

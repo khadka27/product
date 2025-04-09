@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PRODUCT RENAME",
-  description: "product has been renamed",
+  title: "Health Pay Secure",
+  description: "Securely pay for your healthcare",
 };
 
 export default function RootLayout({

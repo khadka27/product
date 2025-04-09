@@ -23,11 +23,10 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
               <Image
-                src="/images/logo-light.svg"
+                src="/images/healthpaysecure.png"
                 alt="HealthPaySecure"
-                width={180}
-                height={40}
-                className="h-10 w-auto"
+                width={300}
+                height={300}
               />
             </Link>
             <p className="text-gray-400 mb-6 pr-8">
@@ -210,11 +209,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center">
                 <Image
-                  src="/images/pci-badge.svg"
+                  src="/images/HeatlyhPay.jpg"
                   alt="PCI Compliant"
                   width={50}
                   height={20}
-                  className="mr-2"
+                  className="mr-2 bg-transparent"
                 />
                 <span className="text-sm">PCI DSS Certified</span>
               </div>
