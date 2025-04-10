@@ -650,7 +650,7 @@ export default function Home() {
             src="/images/healthcare-hero.jpg"
             alt="Healthcare professional with patient"
             fill
-            priority
+            priority={true}
             quality={90}
             className="object-cover opacity-20"
           />
