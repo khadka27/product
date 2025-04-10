@@ -645,13 +645,25 @@ export default function Home() {
         style={{ opacity, scale }}
         className="relative h-screen flex items-center overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700"
       >
-        <div className="relative w-full h-full">
+        {/* <div className="relative w-full h-full">
           <Image
             src="/images/healthcare-hero.jpg"
             alt="Healthcare professional with patient"
             fill
             priority
             quality={90}
+            className="object-cover opacity-20"
+          />
+        </div> */}
+
+        <div className="relative w-full h-[500px]">
+          <Image
+            src="/images/healthcare-hero.jpg"
+            alt="Healthcare professional with patient"
+            fill
+            priority
+            quality={90}
+            sizes="100vw"
             className="object-cover opacity-20"
           />
         </div>
