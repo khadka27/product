@@ -645,12 +645,12 @@ export default function Home() {
         style={{ opacity, scale }}
         className="relative h-screen flex items-center overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700"
       >
-        <div className="absolute inset-0 z-0">
+        <div className="relative w-full h-full">
           <Image
             src="/images/healthcare-hero.jpg"
             alt="Healthcare professional with patient"
             fill
-            priority={true}
+            priority
             quality={90}
             className="object-cover opacity-20"
           />
