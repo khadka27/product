@@ -645,7 +645,7 @@ export default function Home() {
         style={{ opacity, scale }}
         className="relative h-screen flex items-center overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700"
       >
-        <div className="relative w-full h-full">
+        <div className="absolute inset-0 z-0">
           <Image
             src="/images/healthcare-hero.jpg"
             alt="Healthcare professional with patient"
@@ -653,6 +653,7 @@ export default function Home() {
             priority
             quality={90}
             unoptimized
+
             className="object-cover opacity-20"
           />
         </div>
@@ -719,6 +720,8 @@ export default function Home() {
                   alt={`Partner logo ${index}`}
                   width={120}
                   height={60}
+                  unoptimized
+
                   className="opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all"
                 />
               </div>
@@ -932,6 +935,8 @@ export default function Home() {
                 alt="HealthPaySecure platform interface"
                 width={600}
                 height={450}
+                unoptimized
+
                 className="w-full"
               />
             </motion.div>
@@ -1022,6 +1027,8 @@ export default function Home() {
                   alt="HealthPaySecure dashboard"
                   width={600}
                   height={400}
+                  unoptimized
+
                   className="w-full rounded-lg"
                 />
               </div>

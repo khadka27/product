@@ -27,6 +27,7 @@ const Footer = () => {
                 alt="HealthPaySecure"
                 width={300}
                 height={300}
+                unoptimized
               />
             </Link>
             <p className="text-gray-400 mb-6 pr-8">

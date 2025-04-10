@@ -35,6 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled }) => {
               className="object-contain"
               width={200}
               height={200}
+              unoptimized
             />
           </Link>
 
