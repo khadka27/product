@@ -6,7 +6,16 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Copy, Pencil, Trash2, ExternalLink, Search } from "lucide-react";
+import {
+  Copy,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  Search,
+  BarChart2,
+  Eye,
+  Globe,
+} from "lucide-react";
 import Navbar from "@/components/navbar";
 import {
   Card,
@@ -30,6 +39,9 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 import {
   ChartContainer,
@@ -47,40 +59,68 @@ type Product = {
   next_redirect_url: string;
   theme: string;
   generated_link: string;
+  total_clicks: number;
 };
 
-// Sample data for charts
-const performanceData = [
-  { month: "Jan", views: 1200, conversions: 240 },
-  { month: "Feb", views: 1900, conversions: 380 },
-  { month: "Mar", views: 2400, conversions: 480 },
-  { month: "Apr", views: 1800, conversions: 360 },
-  { month: "May", views: 2800, conversions: 560 },
-  { month: "Jun", views: 3600, conversions: 720 },
-  { month: "Jul", views: 3200, conversions: 640 },
+// Type for analytics data
+type AnalyticsData = {
+  totalProducts: number;
+  totalClicks: number;
+  totalUniqueVisitors: number;
+  topCountries: { country: string; count: number }[];
+  products: Product[];
+};
+
+// Type for individual product analytics
+type ProductAnalytics = {
+  totalClicks: number;
+  uniqueVisitors: number;
+  countries: { country: string; count: number }[];
+};
+
+// Custom colors for charts
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884D8",
+  "#82ca9d",
 ];
 
 export default function DashboardClient({ user }: { user?: any }) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [timeRange, setTimeRange] = useState("yearly");
 
-  // Fetch all products from your API on mount.
+  // Fetch all products and analytics data on mount
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch products
+        const productsRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/products`
+        );
+        setProducts(productsRes.data);
 
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/api/products`
-      );
-      setProducts(res.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  };
+        // Fetch analytics data
+        const analyticsRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/analytics?sort=clicks`
+        );
+        setAnalytics(analyticsRes.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleLogout = async () => {
     await signOut({
@@ -89,7 +129,7 @@ export default function DashboardClient({ user }: { user?: any }) {
     });
   };
 
-  // Copy a given link to clipboard.
+  // Copy a given link to clipboard
   const handleCopyLink = async (link: string) => {
     try {
       await navigator.clipboard.writeText(link);
@@ -100,12 +140,12 @@ export default function DashboardClient({ user }: { user?: any }) {
     }
   };
 
-  // Redirect to an edit page. You need to implement this page.
+  // Redirect to edit page
   const handleEdit = (id: string) => {
     router.push(`${process.env.NEXT_PUBLIC_SITE_URL}/admin/edit-product/${id}`);
   };
 
-  // Delete the product via DELETE endpoint and refresh list.
+  // Delete product and refresh list
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
       try {
@@ -113,7 +153,16 @@ export default function DashboardClient({ user }: { user?: any }) {
           `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${id}`
         );
         alert("Product deleted successfully");
-        fetchProducts();
+        // Refresh products and analytics
+        const productsRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/products`
+        );
+        setProducts(productsRes.data);
+
+        const analyticsRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/analytics?sort=clicks`
+        );
+        setAnalytics(analyticsRes.data);
       } catch (error) {
         console.error("Delete error:", error);
         alert("Failed to delete product.");
@@ -121,24 +170,33 @@ export default function DashboardClient({ user }: { user?: any }) {
     }
   };
 
+  // View detailed analytics for a product
+  const handleViewAnalytics = (id: string) => {
+    router.push(`${process.env.NEXT_PUBLIC_SITE_URL}/admin/analytics/${id}`);
+  };
+
   // Filter products based on search term
   const filteredProducts = products.filter(
     (product) =>
       product.new_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.old_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (product.description &&
+        product.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Get user initials for avatar fallback
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  // Prepare data for country distribution pie chart
+  const countryPieData =
+    analytics?.topCountries.map((country) => ({
+      name: country.country,
+      value: country.count,
+    })) || [];
+
+  // Format products data for bar chart (top 5 products by views)
+  const productBarData =
+    analytics?.products.slice(0, 5).map((product) => ({
+      name: product.new_name || product.old_name,
+      clicks: product.total_clicks || 0,
+    })) || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -169,10 +227,12 @@ export default function DashboardClient({ user }: { user?: any }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{products.length}</div>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalProducts || products.length || 0}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {products.length > 0
-                      ? "+1 from last week"
+                      ? "View all products below"
                       : "Add your first product"}
                   </p>
                 </CardContent>
@@ -184,22 +244,26 @@ export default function DashboardClient({ user }: { user?: any }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1,234</div>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalClicks || 0}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +21% from last month
+                    Across all products
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Conversion Rate
+                    Unique Visitors
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">12.5%</div>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalUniqueVisitors || 0}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +2.1% from last month
+                    Unique IP addresses
                   </p>
                 </CardContent>
               </Card>
@@ -244,6 +308,9 @@ export default function DashboardClient({ user }: { user?: any }) {
                             Configuration
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            Analytics
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Images
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -262,14 +329,16 @@ export default function DashboardClient({ user }: { user?: any }) {
                                 <span className="text-sm text-muted-foreground mt-1">
                                   ID: {product.id.substring(0, 8)}...
                                 </span>
-                                <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                                  {product.description?.length > 100
-                                    ? `${product.description.substring(
-                                        0,
-                                        100
-                                      )}...`
-                                    : product.description}
-                                </p>
+                                {product.description && (
+                                  <p className="text-sm text-muted-foreground mt-2 max-w-md">
+                                    {product.description?.length > 100
+                                      ? `${product.description.substring(
+                                          0,
+                                          100
+                                        )}...`
+                                      : product.description}
+                                  </p>
+                                )}
                               </div>
                             </td>
                             <td className="px-4 py-4">
@@ -317,13 +386,32 @@ export default function DashboardClient({ user }: { user?: any }) {
                               </div>
                             </td>
                             <td className="px-4 py-4">
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex items-center">
+                                  <Eye className="h-4 w-4 mr-2 text-muted-foreground" />
+                                  <span>{product.total_clicks || 0} views</span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  onClick={() =>
+                                    handleViewAnalytics(product.id)
+                                  }
+                                >
+                                  <BarChart2 className="h-3 w-3 mr-1" />
+                                  View Stats
+                                </Button>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
                               <div className="flex gap-4">
                                 <div>
                                   <span className="text-xs text-muted-foreground block mb-1">
                                     Old:
                                   </span>
                                   <div className="flex flex-wrap gap-1">
-                                    {JSON.parse(product.old_images)
+                                    {JSON.parse(product.old_images || "[]")
                                       .slice(0, 3)
                                       .map((img: string, index: number) => (
                                         <img
@@ -337,13 +425,14 @@ export default function DashboardClient({ user }: { user?: any }) {
                                           className="h-12 w-12 object-cover rounded border"
                                         />
                                       ))}
-                                    {JSON.parse(product.old_images).length >
-                                      3 && (
+                                    {JSON.parse(product.old_images || "[]")
+                                      .length > 3 && (
                                       <div className="h-12 w-12 flex items-center justify-center bg-muted rounded border">
                                         <span className="text-xs">
                                           +
-                                          {JSON.parse(product.old_images)
-                                            .length - 3}
+                                          {JSON.parse(
+                                            product.old_images || "[]"
+                                          ).length - 3}
                                         </span>
                                       </div>
                                     )}
@@ -354,7 +443,7 @@ export default function DashboardClient({ user }: { user?: any }) {
                                     New:
                                   </span>
                                   <div className="flex flex-wrap gap-1">
-                                    {JSON.parse(product.new_images)
+                                    {JSON.parse(product.new_images || "[]")
                                       .slice(0, 3)
                                       .map((img: string, index: number) => (
                                         <img
@@ -368,13 +457,14 @@ export default function DashboardClient({ user }: { user?: any }) {
                                           className="h-12 w-12 object-cover rounded border"
                                         />
                                       ))}
-                                    {JSON.parse(product.new_images).length >
-                                      3 && (
+                                    {JSON.parse(product.new_images || "[]")
+                                      .length > 3 && (
                                       <div className="h-12 w-12 flex items-center justify-center bg-muted rounded border">
                                         <span className="text-xs">
                                           +
-                                          {JSON.parse(product.new_images)
-                                            .length - 3}
+                                          {JSON.parse(
+                                            product.new_images || "[]"
+                                          ).length - 3}
                                         </span>
                                       </div>
                                     )}
@@ -431,74 +521,105 @@ export default function DashboardClient({ user }: { user?: any }) {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalProducts || 0}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Views
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalClicks || 0}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Unique Visitors
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalUniqueVisitors || 0}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Performance Overview</CardTitle>
+                  <CardTitle>Top Products by Views</CardTitle>
                   <CardDescription>
-                    Product views and conversions over time
+                    Most popular products based on view count
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <ChartContainer
-                    config={{
-                      views: {
-                        label: "Views",
-                        color: "hsl(var(--chart-1))",
-                      },
-                      conversions: {
-                        label: "Conversions",
-                        color: "hsl(var(--chart-2))",
-                      },
-                    }}
-                    className="h-[300px]"
-                  >
+                  <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={performanceData}>
+                      <BarChart data={productBarData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
+                        <XAxis dataKey="name" />
                         <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Tooltip />
                         <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="views"
-                          stroke="var(--color-views)"
-                          activeDot={{ r: 8 }}
+                        <Bar
+                          dataKey="clicks"
+                          fill="hsl(var(--primary))"
+                          name="Total Views"
                         />
-                        <Line
-                          type="monotone"
-                          dataKey="conversions"
-                          stroke="var(--color-conversions)"
-                        />
-                      </LineChart>
+                      </BarChart>
                     </ResponsiveContainer>
-                  </ChartContainer>
+                  </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Product Performance</CardTitle>
+                  <CardTitle>Visitor Geography</CardTitle>
                   <CardDescription>
-                    Comparison of product views by month
+                    Breakdown of visitors by country
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={performanceData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
+                      <PieChart>
+                        <Pie
+                          data={countryPieData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) =>
+                            `${name}: ${(percent * 100).toFixed(0)}%`
+                          }
+                        >
+                          {countryPieData.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
                         <Tooltip />
-                        <Legend />
-                        <Bar dataKey="views" fill="hsl(var(--primary))" />
-                        <Bar
-                          dataKey="conversions"
-                          fill="hsl(var(--secondary))"
-                        />
-                      </BarChart>
+                      </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
@@ -509,12 +630,12 @@ export default function DashboardClient({ user }: { user?: any }) {
               <CardHeader>
                 <CardTitle>Top Performing Products</CardTitle>
                 <CardDescription>
-                  Products with the highest conversion rates
+                  Products with the highest view counts
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {products.slice(0, 5).map((product, index) => (
+                  {analytics?.products.slice(0, 5).map((product, index) => (
                     <div key={product.id} className="flex items-center">
                       <div className="flex-shrink-0 mr-4">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -526,20 +647,29 @@ export default function DashboardClient({ user }: { user?: any }) {
                           {product.new_name || product.old_name}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {Math.floor(Math.random() * 1000)} views
+                          {product.total_clicks || 0} views
                         </p>
                       </div>
                       <div className="ml-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {(Math.random() * 20).toFixed(1)}% conversion
-                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewAnalytics(product.id)}
+                        >
+                          <BarChart2 className="h-4 w-4 mr-2" />
+                          Details
+                        </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push("/admin/analytics")}
+                >
                   View All Analytics
                 </Button>
               </CardFooter>

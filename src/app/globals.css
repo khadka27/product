@@ -150,11 +150,32 @@ p {
   }
 
   h2 {
-    font-size: 0.5rem;
+    font-size: 1.5rem;
   }
 
   h3 {
-    font-size: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .product-name {
+    font-size: 1.7rem !important;
+    text-align: center;
+    padding: 0 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  .product-name {
+    font-size: 1.4rem !important;
+    word-break: break-word;
   }
 }
 
@@ -224,8 +245,29 @@ p {
   .badge-mobile {
     width: 60px !important;
     height: 60px !important;
-    top: -5px !important;
-    right: -5px !important;
+    top: 0 !important;
+    right: 0 !important;
+  }
+  
+  .product-comparison-container {
+    flex-direction: column !important;
+    gap: 2rem !important;
+    align-items: center !important;
+  }
+  
+  .product-item {
+    width: 75% !important;
+    max-width: 250px !important;
+  }
+  
+  .button-container {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .action-button {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
   }
 }
 
@@ -235,6 +277,10 @@ p {
     height: 50px !important;
     top: 0 !important;
     right: 0 !important;
+  }
+  
+  .product-item {
+    width: 90% !important;
   }
 }
 
@@ -288,12 +334,73 @@ p {
   animation: pulse-glow 2s infinite;
 }
 
+/* Arrow Animations */
+@keyframes pulse-horizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes pulse-vertical {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+.animate-pulse-horizontal {
+  animation: pulse-horizontal 1.5s infinite;
+}
+
+.animate-pulse-vertical {
+  animation: pulse-vertical 1.5s infinite;
+}
+
+/* Multi-arrow animation like >>> */
+.arrow-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.animated-arrow {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.animated-arrow svg {
+  position: absolute;
+  animation: arrow-slide 2s infinite;
+}
+
+.animated-arrow svg:nth-child(1) {
+  animation-delay: 0s;
+  opacity: 0;
+}
+
+.animated-arrow svg:nth-child(2) {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.animated-arrow svg:nth-child(3) {
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
 /* Mobile optimizations for product comparison page */
 @media (max-width: 768px) {
-  .action-button {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+  .product-comparison-page {
+    padding: 1rem !important;
   }
 
   /* Adjust the product comparison layout */
@@ -306,6 +413,20 @@ p {
   .arrow-mobile {
     transform: rotate(0deg) !important;
     margin: 0.5rem 0;
+  }
+  
+  .product-title {
+    font-size: 1.5rem !important;
+  }
+  
+  .badge-container {
+    top: 0 !important;
+    right: 0 !important;
+  }
+  
+  .footer-content {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
   }
 }
 

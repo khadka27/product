@@ -336,6 +336,243 @@
 //   }
 // }
 
+// import { NextResponse } from "next/server";
+// import { initializeDatabase, insertProduct } from "@/lib/models";
+// import db from "@/lib/db";
+// import fs from "fs";
+// import path from "path";
+// import { writeFile, mkdir } from "fs/promises";
+
+// // Define the base upload directory (outside public folder for production)
+// // This approach works better for deployed environments
+// const getUploadDir = () => {
+//   // For production, use a dedicated uploads directory at the project root
+//   // For development, you can use public folder for easy testing
+//   const isProduction = process.env.NODE_ENV === "production";
+
+//   if (isProduction) {
+//     // Use a directory that your hosting provider allows writing to
+//     // For example, in Vercel you might use /tmp
+//     // For other hosts, check their documentation for writeable directories
+//     return process.env.UPLOAD_DIR || "/tmp/uploads";
+//   } else {
+//     // In development, can use public dir
+//     return path.join(process.cwd(), "public", "uploads");
+//   }
+// };
+
+// // Function to ensure directory exists
+// async function ensureDir(dirPath: string) {
+//   try {
+//     await mkdir(dirPath, { recursive: true });
+//   } catch (error) {
+//     if ((error as any).code !== "EEXIST") {
+//       throw error;
+//     }
+//   }
+// }
+
+// // Function to save file to storage
+// async function saveFile(file: File, folderName: string) {
+//   // Get base upload directory
+//   const baseUploadDir = getUploadDir();
+
+//   // Create specific folder path
+//   const folderPath = path.join(baseUploadDir, folderName);
+
+//   // Ensure the directory exists
+//   await ensureDir(folderPath);
+
+//   // Generate unique filename
+//   const fileExtension = file.name.split(".").pop();
+//   const fileName = `${Date.now()}_${Math.random()
+//     .toString(36)
+//     .substring(2, 15)}.${fileExtension}`;
+//   const filePath = path.join(folderPath, fileName);
+
+//   // Get file buffer and write to disk
+//   const buffer = Buffer.from(await file.arrayBuffer());
+//   await writeFile(filePath, buffer);
+
+//   // Store the relative path plus the configured BASE_URL for database
+//   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+//   return `${baseUrl}/api/images/${folderName}/${fileName}`;
+// }
+
+// export async function POST(req: Request) {
+//   await initializeDatabase();
+
+//   const formData = await req.formData();
+
+//   // Basic fields
+//   const old_name = formData.get("old_name") || "";
+//   const new_name = formData.get("new_name") || "";
+//   const description = formData.get("description") || "";
+//   const nextRedirectUrl = formData.get("next_redirect_url") || "";
+//   const theme = formData.get("theme") || "";
+
+//   // New fields from original request
+//   const rename_reason = formData.get("rename_reason") || "";
+//   let metadata = {};
+//   try {
+//     const metadataStr = formData.get("metadata");
+//     if (metadataStr) {
+//       metadata = JSON.parse(metadataStr as string);
+//     }
+//   } catch (e) {
+//     console.error("Error parsing metadata JSON:", e);
+//   }
+
+//   // Handle description points (max 4)
+//   const description_points = [];
+//   for (let i = 1; i <= 4; i++) {
+//     const point = formData.get(`description_point_${i}`);
+//     if (typeof point === "string" && point?.trim()) {
+//       if (typeof point === "string") {
+//         description_points.push(point.trim());
+//       }
+//     }
+//   }
+
+//   // Alternative way to get description points if submitted as JSON
+//   try {
+//     const pointsJson = formData.get("description_points");
+//     if (pointsJson) {
+//       const parsed = JSON.parse(typeof pointsJson === "string" ? pointsJson : "[]");
+//       if (Array.isArray(parsed)) {
+//         // Only take up to 4 points
+//         description_points.splice(
+//           0,
+//           description_points.length,
+//           ...parsed.slice(0, 4)
+//         );
+//       }
+//     }
+//   } catch (e) {
+//     // If parsing fails, keep using the individually collected points
+//     console.error("Error parsing description points JSON:", e);
+//   }
+
+//   // SEO fields from new request
+//   const page_title = formData.get("page_title") || "";
+//   const meta_description = formData.get("meta_description") || "";
+//   const seo_title = formData.get("seo_title") || "";
+
+//   // Popup content fields from new request
+//   const popup_title = formData.get("popup_title") || "";
+//   const popup_content = formData.get("popup_content") || "";
+
+//   // Redirect timer
+//   const redirectTimerStr = formData.get("redirect_timer");
+//   const redirectTimer = redirectTimerStr ? parseInt(redirectTimerStr as string, 10) : 0;
+
+//   // Image collections
+//   const oldImages = [];
+//   const newImages = [];
+//   let badgeImageUrl = null;
+
+//   // Upload files to storage folders
+//   for (const entry of formData.entries()) {
+//     const [key, value] = entry;
+//     if (value instanceof File) {
+//       try {
+//         if (key === "old_images") {
+//           const imagePath = await saveFile(value, "old_images");
+//           oldImages.push(imagePath);
+//         } else if (key === "new_images") {
+//           const imagePath = await saveFile(value, "new_images");
+//           newImages.push(imagePath);
+//         } else if (key === "badge_image") {
+//           const imagePath = await saveFile(value, "badge_images");
+//           badgeImageUrl = imagePath;
+//         }
+//       } catch (error) {
+//         console.error(`Error saving file ${key}:`, error);
+//         return NextResponse.json(
+//           {
+//             error: "File upload failed",
+//             details: `Error saving ${key} to disk`,
+//           },
+//           { status: 500 }
+//         );
+//       }
+//     }
+//   }
+
+//   try {
+//     // Call the insertProduct function - it returns { result, id }
+//     const response = await insertProduct(
+//       old_name as string,
+//       new_name as string,
+//       description as string,
+//       description_points,
+//       metadata,
+//       rename_reason as string,
+//       oldImages,
+//       newImages,
+//       badgeImageUrl,
+//       nextRedirectUrl as string,
+//       redirectTimer,
+//       theme as string,
+//       "", // generatedLink (will be updated after)
+//       page_title as string,
+//       meta_description as string,
+//       seo_title as string,
+//       popup_title as string,
+//       popup_content as string
+//     );
+
+//     console.log("Insert response:", response);
+
+//     // Get the UUID from the response
+//     const id = response.id;
+
+//     // Validate the ID
+//     if (!id) {
+//       console.error("Invalid ID returned:", response);
+//       throw new Error("Failed to get valid product ID from database");
+//     }
+
+//     // Generate a slug-based URL
+//     const slug = (old_name as string).toLowerCase().trim().replace(/\s+/g, "-");
+//     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+//     const cleanSiteUrl = siteUrl.replace(/\/$/, "");
+//     const generatedLink = `${cleanSiteUrl}/product/${slug}-${id}`;
+
+//     console.log("Generated link:", generatedLink);
+//     console.log("Product ID:", id);
+
+//     // Update the product with the generated link
+//     await db.query("UPDATE products SET generated_link = ? WHERE id = ?", [
+//       generatedLink,
+//       id,
+//     ]);
+
+//     return NextResponse.json({
+//       message: "Product created successfully",
+//       id,
+//       generatedLink,
+//       old_name,
+//       new_name,
+//       description_points,
+//       metadata,
+//       rename_reason,
+//       oldImagesCount: oldImages.length,
+//       newImagesCount: newImages.length,
+//       hasBadge: badgeImageUrl !== null,
+//     });
+//   } catch (error) {
+//     console.error("Error creating product:", error);
+//     return NextResponse.json(
+//       {
+//         error: (error instanceof Error ? error.message : "Unknown error"),
+//         details: "Failed to create product",
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
+
 import { NextResponse } from "next/server";
 import { initializeDatabase, insertProduct } from "@/lib/models";
 import db from "@/lib/db";
@@ -353,7 +590,6 @@ const getUploadDir = () => {
   if (isProduction) {
     // Use a directory that your hosting provider allows writing to
     // For example, in Vercel you might use /tmp
-    // For other hosts, check their documentation for writeable directories
     return process.env.UPLOAD_DIR || "/tmp/uploads";
   } else {
     // In development, can use public dir
@@ -438,7 +674,9 @@ export async function POST(req: Request) {
   try {
     const pointsJson = formData.get("description_points");
     if (pointsJson) {
-      const parsed = JSON.parse(typeof pointsJson === "string" ? pointsJson : "[]");
+      const parsed = JSON.parse(
+        typeof pointsJson === "string" ? pointsJson : "[]"
+      );
       if (Array.isArray(parsed)) {
         // Only take up to 4 points
         description_points.splice(
@@ -453,23 +691,30 @@ export async function POST(req: Request) {
     console.error("Error parsing description points JSON:", e);
   }
 
-  // SEO fields from new request
+  // SEO fields
   const page_title = formData.get("page_title") || "";
   const meta_description = formData.get("meta_description") || "";
   const seo_title = formData.get("seo_title") || "";
 
-  // Popup content fields from new request
+  // Popup title only (content removed as requested)
   const popup_title = formData.get("popup_title") || "";
-  const popup_content = formData.get("popup_content") || "";
+
+  // New fields: extra badges
+  const extra_badge_1 = formData.get("extra_badge_1") || "";
+  const extra_badge_2 = formData.get("extra_badge_2") || "";
 
   // Redirect timer
   const redirectTimerStr = formData.get("redirect_timer");
-  const redirectTimer = redirectTimerStr ? parseInt(redirectTimerStr as string, 10) : 0;
+  const redirectTimer = redirectTimerStr
+    ? parseInt(redirectTimerStr as string, 10)
+    : 0;
 
   // Image collections
   const oldImages = [];
   const newImages = [];
   let badgeImageUrl = null;
+  let extraBadge1Url = null;
+  let extraBadge2Url = null;
 
   // Upload files to storage folders
   for (const entry of formData.entries()) {
@@ -484,7 +729,15 @@ export async function POST(req: Request) {
           newImages.push(imagePath);
         } else if (key === "badge_image") {
           const imagePath = await saveFile(value, "badge_images");
+          console.log("Saved badge image to path:", imagePath);
+
           badgeImageUrl = imagePath;
+        } else if (key === "extra_badge_1_image") {
+          const imagePath = await saveFile(value, "extra_badge_1");
+          extraBadge1Url = imagePath;
+        } else if (key === "extra_badge_2_image") {
+          const imagePath = await saveFile(value, "extra_badge_2");
+          extraBadge2Url = imagePath;
         }
       } catch (error) {
         console.error(`Error saving file ${key}:`, error);
@@ -511,6 +764,8 @@ export async function POST(req: Request) {
       oldImages,
       newImages,
       badgeImageUrl,
+      extraBadge1Url, // New parameter for extra badge 1
+      extraBadge2Url, // New parameter for extra badge 2
       nextRedirectUrl as string,
       redirectTimer,
       theme as string,
@@ -518,8 +773,7 @@ export async function POST(req: Request) {
       page_title as string,
       meta_description as string,
       seo_title as string,
-      popup_title as string,
-      popup_content as string
+      popup_title as string
     );
 
     console.log("Insert response:", response);
@@ -560,12 +814,14 @@ export async function POST(req: Request) {
       oldImagesCount: oldImages.length,
       newImagesCount: newImages.length,
       hasBadge: badgeImageUrl !== null,
+      hasExtraBadge1: extraBadge1Url !== null,
+      hasExtraBadge2: extraBadge2Url !== null,
     });
   } catch (error) {
     console.error("Error creating product:", error);
     return NextResponse.json(
       {
-        error: (error instanceof Error ? error.message : "Unknown error"),
+        error: error instanceof Error ? error.message : "Unknown error",
         details: "Failed to create product",
       },
       { status: 500 }
