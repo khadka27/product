@@ -106,7 +106,7 @@ export default function ProductRebrandContent() {
         }
 
         setProduct(processedProduct);
-        setTimeLeft(processedProduct.redirect_timer || 10);
+        setTimeLeft(processedProduct.redirect_timer || 7);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -242,7 +242,7 @@ export default function ProductRebrandContent() {
     <main
       className={`min-h-screen overflow-hidden text-center relative ${
         product.theme === "dark"
-          ? "bg-[#17414f] text-white"
+          ? "bg-[#17414f] text-[#007197]"
           : "bg-[#e2f5fb] text-[#17414f]"
       }`}
     >
@@ -250,7 +250,7 @@ export default function ProductRebrandContent() {
       <div className="absolute top-4 right-4 z-50">{/* <ThemeToggle /> */}</div>
 
       {/* First Section */}
-      <section className="relative z-10 flex flex-col items-center justify-center px-4 py-12 md:py-4 lg:py-8">
+      <section className="relative z-10 flex flex-col items-center justify-center px-4 py-20 md:py-4 lg:py-8">
         {/* Timer */}
         {timeLeft > 0 && (
           <motion.div
@@ -274,14 +274,14 @@ export default function ProductRebrandContent() {
             <span className="text-[#41bae3] dark:text-[#41bae3]">
               {product.old_name}
             </span>{" "}
-            <span className="text-[#ffffff] dark:text-white">
+            <span className="text-[#007197] dark:text-white">
               HAS BEEN RENAMED TO
             </span>{" "}
             <span className="text-[#482af4] dark:text-white">
               {product.new_name}
             </span>
           </h1>
-          <p className="text-xl sm:text-2xl text-[#ffffff] dark:text-white font-medium">
+          <p className="text-xl sm:text-2xl text-[#007197] dark:text-white font-medium">
             DUE TO COUNTERFEIT ISSUES
           </p>
         </motion.div>
@@ -302,10 +302,10 @@ export default function ProductRebrandContent() {
                 width={200}
                 height={250}
                 style={{ objectFit: "contain" }}
-                className="p-2 ml-5"
+                className="p-2 md:ml-5   "
               />
             </div>
-            <span className="text-[#ffffff] dark:text-[#41bae3] font-bold text-lg xs:text-lg sm:text-2xl md:text-3xl text-center mt-2 xs:mt-4">
+            <span className="text-[#007197] dark:text-[#41bae3] font-bold text-xl xs:text-lg sm:text-2xl sm:font-bold md:text-3xl text-center mt-2 xs:mt-4">
               {product.old_name}
             </span>
           </motion.div>
@@ -318,7 +318,7 @@ export default function ProductRebrandContent() {
             className="flex justify-center items-center z-10 absolute left-1/2 transform -translate-x-1/2 xs:static xs:transform-none"
           >
             <motion.div
-              className="relative bg-[#3da4c7] text-white p-1 xs:p-2 sm:p-3 rounded-md shadow-lg"
+              className="relative  p-1 xs:p-2 sm:p-3 "
               animate={{
                 x: [0, 10, 0],
                 scale: [1, 1.1, 1],
@@ -330,19 +330,24 @@ export default function ProductRebrandContent() {
               }}
             >
               <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                width="137"
+                height="76"
+                viewBox="0 0 137 76"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 xs:w-6 xs:h-6 sm:w-8 sm:h-8 md:w-10 md:h-10"
+                className="w-18 h-12 xs:w-12 xs:h-12 sm:w-12 sm:h-8 md:w-96 md:h-24"
               >
                 <path
-                  d="M5 12H19M19 12L12 5M19 12L12 19"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  d="M136.12 37.9008L80.7866 0V20.2137H37.6266V55.5878H80.7866V75.8015L136.12 37.9008Z"
+                  fill="#187D9F"
+                />
+                <path
+                  d="M18.8134 20.2137H29.88V55.5878H18.8134V20.2137Z"
+                  fill="#187D9F"
+                />
+                <path
+                  d="M0 20.2137H11.0667V55.5878H0V20.2137Z"
+                  fill="#187D9F"
                 />
               </svg>
             </motion.div>
@@ -370,7 +375,7 @@ export default function ProductRebrandContent() {
                 width={200}
                 height={250}
                 style={{ objectFit: "contain" }}
-                className="p-2 ml-5  drop-shadow-lg "
+                className="p-2 md:ml-5  "
               />
               <div className="absolute -top-2 -right-2 xs:-top-4 xs:-right-4 w-12 h-12 xs:w-16 xs:h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 animate-pulse">
                 <Image
@@ -382,7 +387,7 @@ export default function ProductRebrandContent() {
                 />
               </div>
             </motion.div>
-            <span className="text-[#c9351b] font-bold text-lg xs:text-lg sm:text-2xl md:text-3xl text-center mt-2 xs:mt-4">
+            <span className="text-[#c9351b] font-bold text-xl xs:text-lg sm:text-xl md:text-3xl sm:font-bold text-center  xs:mt-4">
               {product.new_name}
             </span>
           </motion.div>
@@ -393,19 +398,19 @@ export default function ProductRebrandContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 1.2 }}
-          className="flex flex-row gap-4 justify-center  w-full max-w-md mx-auto px-4"
+          className="flex flex-row gap-4 justify-center mt-6  w-full max-w-md mx-auto px-4"
         >
           <Button
             onClick={scrollToSecondSection}
             variant="outline"
-            className="bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-[#1a2e35] text-[#17414f] dark:text-white border-[#17414f] dark:border-white rounded-full px-4 xs:px-6 py-4 xs:py-6 text-xs xs:text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all duration-300 w-1/2"
+            className="bg-white dark:bg-transparent hover:bg-gray-100 dark:hover:bg-[#1a2e35] text-[#17414f] dark:text-white border-[#17414f] dark:border-white rounded-full px-4 xs:px-6 py-4 xs:py-6 text-xs xs:text-sm sm:text-xl font-bold shadow-md hover:shadow-lg transition-all duration-300 w-1/2 h-full"
           >
             LEARN MORE
           </Button>
 
           <Button
             onClick={handleBuyNow}
-            className="bg-[#000000] hover:bg-[#0f2a33] dark:bg-[#41bae3] dark:hover:bg-[#3da4c7] text-white rounded-full px-4 xs:px-6 py-4 xs:py-6 text-xs xs:text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all duration-300 w-1/2"
+            className="bg-[#007197] hover:bg-[#0f2a33] dark:bg-[#41bae3] dark:hover:bg-[#3da4c7] text-white rounded-full px-4 xs:px-6 py-4 xs:py-6 text-xs xs:text-sm sm:text-xl font-bold  shadow-md hover:shadow-lg transition-all duration-300 w-1/2 h-full"
           >
             <ShoppingCart className="mr-1 xs:mr-2 h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5" />{" "}
             BUY NOW
@@ -419,8 +424,8 @@ export default function ProductRebrandContent() {
         id="buy-now"
         className={`relative z-10 py-16 md:py-24 ${
           product.theme === "dark"
-            ? "bg-[#1a2e35] text-white"
-            : "bg-white text-[#17414f]"
+            ? "bg-[#17414F] text-white"
+            : "bg-[#e2f5fb] text-[#17414f]"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
@@ -448,7 +453,7 @@ export default function ProductRebrandContent() {
                 />
 
                 <motion.div
-                  className="relative w-64 h-80 sm:w-3xl sm:h-96 md:ml-50"
+                  className="relative w-64 h-80  sm:w-3xl sm:h-96 md:ml-50"
                   animate={{ y: [0, -10, 0] }}
                   transition={{
                     repeat: Number.POSITIVE_INFINITY,
@@ -486,11 +491,11 @@ export default function ProductRebrandContent() {
               viewport={{ once: true }}
               className="md:w-1/2 text-left"
             >
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#17414f] dark:text-white mb-6">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#007197] dark:text-white mb-6">
                 {product.new_name}{" "}
               </h2>
 
-              <p className="text-[#17414f] dark:text-gray-200 mb-6 text-lg">
+              <p className="text-[#007197] dark:text-gray-200 mb-6 text-lg">
                 {product.description}
               </p>
 
@@ -525,9 +530,9 @@ export default function ProductRebrandContent() {
               <div className="flex flex-row items-center gap-6">
                 <Button
                   onClick={handleBuyNow}
-                  className="bg-[#000000] hover:bg-[#0f2a33] dark:bg-[#41bae3] dark:hover:bg-[#3da4c7] text-white rounded-full px-8 py-7 text-lg font-bold w-1/2 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-[#007197] hover:bg-[#0f2a33] dark:bg-[#41bae3] dark:hover:bg-[#3da4c7] text-white rounded-full px-8 py-7 text-2xl font-bold w-1/2 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <ShoppingCart className="mr-2 h-5 w-5" /> BUY NOW
+                  <ShoppingCart className=" h-6 w-6 font-bold" /> BUY NOW
                 </Button>
 
                 <div className="flex gap-6">

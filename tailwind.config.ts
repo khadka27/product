@@ -10,6 +10,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+      },
       screens: {
         xs: "380px",
       },

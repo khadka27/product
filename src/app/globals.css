@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -80,8 +79,10 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -124,20 +125,41 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* Apply Inter font to all text elements */
+body {
+  font-family: "Inter", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+}
+
+p,
+span,
+div {
+  font-family: "Inter", sans-serif;
+}
+
 /* Paragraph styles */
 p {
-  font-family: Arial, sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .description-text {
-  font-family: Arial, sans-serif;
+  font-family: Inter;
   font-size: 0.9rem;
   line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
 .popup-content p {
-  font-family: Arial, sans-serif;
+  font-family: Inter;
   font-size: 1.1rem;
   line-height: 1.7;
   text-align: center;
@@ -248,23 +270,23 @@ p {
     top: 0 !important;
     right: 0 !important;
   }
-  
+
   .product-comparison-container {
     flex-direction: column !important;
     gap: 2rem !important;
     align-items: center !important;
   }
-  
+
   .product-item {
     width: 75% !important;
     max-width: 250px !important;
   }
-  
+
   .button-container {
     flex-direction: column !important;
     width: 100% !important;
   }
-  
+
   .action-button {
     width: 100% !important;
     margin-bottom: 1rem !important;
@@ -278,7 +300,7 @@ p {
     top: 0 !important;
     right: 0 !important;
   }
-  
+
   .product-item {
     width: 90% !important;
   }
@@ -336,7 +358,8 @@ p {
 
 /* Arrow Animations */
 @keyframes pulse-horizontal {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   50% {
@@ -345,7 +368,8 @@ p {
 }
 
 @keyframes pulse-vertical {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -414,16 +438,16 @@ p {
     transform: rotate(0deg) !important;
     margin: 0.5rem 0;
   }
-  
+
   .product-title {
     font-size: 1.5rem !important;
   }
-  
+
   .badge-container {
     top: 0 !important;
     right: 0 !important;
   }
-  
+
   .footer-content {
     flex-direction: column !important;
     gap: 0.5rem !important;

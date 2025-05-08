@@ -759,8 +759,6 @@ export async function POST(req: Request) {
       new_name as string,
       description as string,
       description_points,
-      metadata,
-      rename_reason as string,
       oldImages,
       newImages,
       badgeImageUrl,
@@ -770,10 +768,8 @@ export async function POST(req: Request) {
       redirectTimer,
       theme as string,
       "", // generatedLink (will be updated after)
-      page_title as string,
       meta_description as string,
-      seo_title as string,
-      popup_title as string
+      seo_title as string
     );
 
     console.log("Insert response:", response);
