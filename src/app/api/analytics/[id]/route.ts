@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse> {
   // Check if user is authenticated (for admin/protected stats)
   const sessionCookie = (await cookies()).get("session")?.value;
   const isAdmin = sessionCookie === "admin-token";
