@@ -1,21 +1,22 @@
-// File: /pages/api/analytics/[id].ts
-import { NextApiRequest, NextApiResponse } from "next";
+// File: src/app/api/analytics/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { getVisitStats, getVisitDetails } from "@/lib/visit";
 import { getProductById } from "@/lib/models";
+import { cookies } from "next/headers";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   // Check if user is authenticated (for admin/protected stats)
-  const sessionCookie = req.cookies.session;
+  const sessionCookie = (await cookies()).get("session")?.value;
   const isAdmin = sessionCookie === "admin-token";
 
-  // Get product ID from query params
-  const { id } = req.query;
+  // Get product ID from params
+  const { id } = params;
 
-  if (!id || typeof id !== "string") {
-    return res.status(400).json({ error: "Invalid product ID" });
+  if (!id) {
+    return NextResponse.json({ error: "Invalid product ID" }, { status: 400 });
   }
 
   try {
@@ -23,16 +24,19 @@ export default async function handler(
     const product = await getProductById(id);
 
     if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
     // Get basic stats (available to all with the link)
     const stats = await getVisitStats(id);
 
     // If admin, include more detailed information
-    if (isAdmin && req.query.detailed === "true") {
+    const url = new URL(request.url);
+    const detailed = url.searchParams.get("detailed") === "true";
+
+    if (isAdmin && detailed) {
       const details = await getVisitDetails(id);
-      return res.status(200).json({
+      return NextResponse.json({
         ...stats,
         product: {
           id: product.id,
@@ -45,9 +49,12 @@ export default async function handler(
     }
 
     // Return basic stats for non-admin or when detailed not requested
-    return res.status(200).json(stats);
+    return NextResponse.json(stats);
   } catch (error) {
     console.error("Error fetching analytics:", error);
-    return res.status(500).json({ error: "Failed to fetch analytics data" });
+    return NextResponse.json(
+      { error: "Failed to fetch analytics data" },
+      { status: 500 }
+    );
   }
 }
