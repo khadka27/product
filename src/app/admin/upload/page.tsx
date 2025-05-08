@@ -886,10 +886,425 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+// "use client";
+
+// import type React from "react";
+// import { useState, useEffect } from "react";
+// import axios from "axios";
+// import Image from "next/image";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Textarea } from "@/components/ui/textarea";
+// import {
+//   Card,
+//   CardContent,
+//   CardHeader,
+//   CardTitle,
+//   CardFooter,
+//   CardDescription,
+// } from "@/components/ui/card";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Label } from "@/components/ui/label";
+// import {
+//   Loader2,
+//   CheckCircle,
+//   Upload,
+//   Sun,
+//   Moon,
+//   Tag,
+//   Plus,
+//   Trash2,
+//   Copy,
+//   ArrowRight,
+//   Badge,
+// } from "lucide-react";
+// import { cn } from "@/lib/utils";
+// import Navbar from "@/components/navbar";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "@/components/ui/tooltip";
+
+// export default function UploadPage() {
+//   const [formData, setFormData] = useState({
+//     // Basic fields
+//     old_name: "",
+//     new_name: "",
+//     description: "",
+//     next_redirect_url: "",
+//     redirect_timer: "0",
+//     theme: "light",
+
+//     // SEO fields
+//     page_title: "",
+//     seo_title: "",
+//     meta_description: "",
+
+//     // Content fields
+//     description_points: ["", "", "", ""],
+//     rename_reason: "",
+//     metadata: {
+//       version: "",
+//       release_date: "",
+//     },
+
+//     // Popup fields
+//     popup_title: "",
+
+//     // Image fields
+//     old_images: [] as File[],
+//     new_images: [] as File[],
+//     badge_image_url: null as File | null,
+//     extra_badge_1: null as File | null,
+//     extra_badge_2: null as File | null,
+//   });
+
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+//   const [oldImagePreviews, setOldImagePreviews] = useState<string[]>([]);
+//   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+//   const [badgeImagePreview, setBadgeImagePreview] = useState<string | null>(
+//     null
+//   );
+//   const [extraBadge1Preview, setExtraBadge1Preview] = useState<string | null>(
+//     null
+//   );
+//   const [extraBadge2Preview, setExtraBadge2Preview] = useState<string | null>(
+//     null
+//   );
+//   const [activeTab, setActiveTab] = useState("seo");
+//   const [showSuccess, setShowSuccess] = useState(false);
+//   const [activePoints, setActivePoints] = useState<number>(0);
+
+//   // Track form completion status
+//   const [tabCompletion, setTabCompletion] = useState({
+//     seo: false,
+//     basic: false,
+//     images: false,
+//     content: false,
+//     settings: false, // Changed to false since we're making fields required
+//   });
+
+//   useEffect(() => {
+//     // Update active points count on component mount
+//     updateActivePoints();
+//   }, []);
+
+//   useEffect(() => {
+//     // Update tab completion status
+//     setTabCompletion({
+//       ...tabCompletion,
+//       seo: !!formData.seo_title && !!formData.meta_description, // Made required
+//       basic:
+//         !!formData.old_name &&
+//         !!formData.new_name &&
+//         !!formData.page_title &&
+//         !!formData.popup_title,
+//       images:
+//         formData.old_images.length > 0 &&
+//         formData.new_images.length > 0 &&
+//         !!formData.badge_image_url &&
+//         !!formData.extra_badge_1 &&
+//         !!formData.extra_badge_2,
+//       content:
+//         !!formData.description &&
+//         formData.description_points.filter((p) => p.trim()).length >= 2 &&
+//         !!formData.rename_reason,
+//       settings: !!formData.next_redirect_url && formData.redirect_timer !== "", // Made required
+//     });
+//   }, [formData]);
+
+//   const handleChange = (
+//     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+//   ) => {
+//     const { name, value } = e.target;
+//     setFormData((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleMetadataChange = (
+//     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+//   ) => {
+//     const { name, value } = e.target;
+//     setFormData((prev) => ({
+//       ...prev,
+//       metadata: {
+//         ...prev.metadata,
+//         [name]: value,
+//       },
+//     }));
+//   };
+
+//   const handleDescriptionPointChange = (index: number, value: string) => {
+//     setFormData((prev) => {
+//       const newPoints = [...prev.description_points];
+//       newPoints[index] = value;
+//       return { ...prev, description_points: newPoints };
+//     });
+
+//     // Update the active points count
+//     updateActivePoints();
+//   };
+
+//   const updateActivePoints = () => {
+//     const activeCount = formData.description_points.filter(
+//       (p) => p.trim() !== ""
+//     ).length;
+//     setActivePoints(activeCount);
+//   };
+
+//   const addBulletPoint = () => {
+//     // Add a new empty bullet point
+//     setFormData((prev) => ({
+//       ...prev,
+//       description_points: [...prev.description_points, ""],
+//     }));
+
+//     // Focus the new field after render
+//     setTimeout(() => {
+//       const newIndex = formData.description_points.length;
+//       const element = document.getElementById(`bullet-point-${newIndex}`);
+//       if (element) {
+//         element.focus();
+//       }
+//     }, 0);
+//   };
+
+//   const removeBulletPoint = (index: number) => {
+//     setFormData((prev) => {
+//       const newPoints = [...prev.description_points];
+//       newPoints.splice(index, 1);
+//       return { ...prev, description_points: newPoints };
+//     });
+
+//     // Update the active points count
+//     setTimeout(updateActivePoints, 0);
+//   };
+
+//   const handleThemeChange = (theme: string) => {
+//     setFormData((prev) => ({ ...prev, theme }));
+//   };
+
+//   const handleFileChange = (
+//     e: React.ChangeEvent<HTMLInputElement>,
+//     type: "old" | "new" | "badge_image" | "extra_badge_1" | "extra_badge_2"
+//   ) => {
+//     const files = Array.from(e.target.files || []);
+
+//     if (
+//       type === "badge_image" ||
+//       type === "extra_badge_1" ||
+//       type === "extra_badge_2"
+//     ) {
+//       // For badge images, we only take the first file
+//       if (files.length > 0) {
+//         setFormData((prev) => ({
+//           ...prev,
+//           [type]: files[0],
+//         }));
+
+//         // Set the appropriate preview
+//         const previewUrl = URL.createObjectURL(files[0]);
+//         if (type === "badge_image") {
+//           setBadgeImagePreview(previewUrl);
+//         } else if (type === "extra_badge_1") {
+//           setExtraBadge1Preview(previewUrl);
+//         } else if (type === "extra_badge_2") {
+//           setExtraBadge2Preview(previewUrl);
+//         }
+//       }
+//     } else {
+//       // For old and new images, we take multiple files
+//       setFormData((prev) => ({
+//         ...prev,
+//         [type === "old" ? "old_images" : "new_images"]: files,
+//       }));
+
+//       // Generate image previews
+//       const previews = files.map((file) => URL.createObjectURL(file));
+//       if (type === "old") {
+//         setOldImagePreviews(previews);
+//       } else {
+//         setNewImagePreviews(previews);
+//       }
+//     }
+//   };
+
+//   const copyToClipboard = (text: string) => {
+//     navigator.clipboard.writeText(text).then(() => {});
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setIsSubmitting(true);
+
+//     const data = new FormData();
+
+//     // Basic fields
+//     data.append("old_name", formData.old_name);
+//     data.append("new_name", formData.new_name);
+//     data.append("description", formData.description);
+//     data.append("next_redirect_url", formData.next_redirect_url);
+//     data.append("redirect_timer", formData.redirect_timer);
+//     data.append("theme", formData.theme);
+
+//     // SEO fields
+//     data.append("page_title", formData.page_title);
+//     data.append("seo_title", formData.seo_title);
+//     data.append("meta_description", formData.meta_description);
+
+//     // Content fields
+//     data.append("rename_reason", formData.rename_reason);
+
+//     // Popup fields
+//     data.append("popup_title", formData.popup_title);
+
+//     // Description points - only append non-empty points
+//     const nonEmptyPoints = formData.description_points.filter(
+//       (p) => p.trim() !== ""
+//     );
+//     data.append("description_points", JSON.stringify(nonEmptyPoints));
+
+//     // Metadata as JSON
+//     data.append("metadata", JSON.stringify(formData.metadata));
+
+//     // Images
+//     formData.old_images.forEach((file) => data.append("old_images", file));
+//     formData.new_images.forEach((file) => data.append("new_images", file));
+
+//     // Badge images
+//     if (formData.badge_image_url) {
+//       data.append("badge_image", formData.badge_image_url);
+//     }
+
+//     if (formData.extra_badge_1) {
+//       data.append("extra_badge_1_image", formData.extra_badge_1);
+//     }
+
+//     if (formData.extra_badge_2) {
+//       data.append("extra_badge_2_image", formData.extra_badge_2);
+//     }
+
+//     try {
+//       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+//       const res = await axios.post(`${baseUrl}/api/upload`, data, {
+//         headers: { "Content-Type": "multipart/form-data" },
+//       });
+
+//       if (res.status === 200) {
+//         setGeneratedLink(res.data.generatedLink);
+//         setShowSuccess(true);
+//       }
+//     } catch (error) {
+//       console.error("Upload error:", error);
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   if (showSuccess) {
+//     return (
+//       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[70vh]">
+//         <Card className="w-full max-w-xl">
+//           <CardHeader className="text-center">
+//             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+//             <CardTitle className="text-2xl">Upload Successful!</CardTitle>
+//           </CardHeader>
+//           <CardContent className="text-center">
+//             <p className="mb-4">Your product has been uploaded successfully.</p>
+
+//             {generatedLink && (
+//               <div className="mb-6">
+//                 <p className="mb-2 font-semibold">Generated Link:</p>
+//                 <div className="bg-gray-100 p-3 rounded-md break-all flex items-center justify-between">
+//                   <a
+//                     href={generatedLink}
+//                     className="text-blue-600 hover:underline"
+//                     target="_blank"
+//                     rel="noopener noreferrer"
+//                   >
+//                     {generatedLink}
+//                   </a>
+//                   <Button
+//                     variant="ghost"
+//                     size="sm"
+//                     onClick={() => copyToClipboard(generatedLink)}
+//                     className="ml-2"
+//                   >
+//                     <Copy className="h-4 w-4" />
+//                   </Button>
+//                 </div>
+//               </div>
+//             )}
+
+//             {formData.next_redirect_url && (
+//               <p className="mb-6">
+//                 Redirect URL:{" "}
+//                 <a
+//                   href={formData.next_redirect_url}
+//                   className="text-blue-600 hover:underline"
+//                   target="_blank"
+//                   rel="noopener noreferrer"
+//                 >
+//                   {formData.next_redirect_url}
+//                 </a>
+//               </p>
+//             )}
+//           </CardContent>
+//           <CardFooter className="flex justify-center gap-4">
+//             <Button
+//               onClick={() => {
+//                 setShowSuccess(false);
+//                 setGeneratedLink(null);
+//                 setFormData({
+//                   old_name: "",
+//                   new_name: "",
+//                   description: "",
+//                   description_points: ["", "", "", ""],
+//                   rename_reason: "",
+//                   metadata: {
+//                     version: "",
+//                     release_date: "",
+//                   },
+//                   next_redirect_url: "",
+//                   redirect_timer: "0",
+//                   theme: "light",
+//                   page_title: "",
+//                   seo_title: "",
+//                   meta_description: "",
+//                   popup_title: "",
+//                   old_images: [],
+//                   new_images: [],
+//                   badge_image_url: null,
+//                   extra_badge_1: null,
+//                   extra_badge_2: null,
+//                 });
+//                 setOldImagePreviews([]);
+//                 setNewImagePreviews([]);
+//                 setBadgeImagePreview(null);
+//                 setExtraBadge1Preview(null);
+//                 setExtraBadge2Preview(null);
+//                 setActiveTab("seo");
+//                 setActivePoints(0);
+//               }}
+//               variant="outline"
+//             >
+//               Upload Another Product
+//             </Button>
+//             {generatedLink && (
+//               <Button onClick={() => window.open(generatedLink, "_blank")}>
+//                 View Product Page
+//               </Button>
+//             )}
+//           </CardFooter>
+//         </Card>
+//       </div>
+//     );
+//   }
 "use client";
 
-import type React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -916,7 +1331,6 @@ import {
   Trash2,
   Copy,
   ArrowRight,
-  Badge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/navbar";
@@ -929,38 +1343,25 @@ import {
 
 export default function UploadPage() {
   const [formData, setFormData] = useState({
-    // Basic fields
     old_name: "",
     new_name: "",
     description: "",
     next_redirect_url: "",
     redirect_timer: "0",
     theme: "light",
-
-    // SEO fields
     page_title: "",
     seo_title: "",
     meta_description: "",
-
-    // Content fields
     description_points: ["", "", "", ""],
     rename_reason: "",
-    metadata: {
-      version: "",
-      release_date: "",
-    },
-
-    // Popup fields
+    metadata: { version: "", release_date: "" },
     popup_title: "",
-
-    // Image fields
     old_images: [] as File[],
     new_images: [] as File[],
     badge_image_url: null as File | null,
     extra_badge_1: null as File | null,
     extra_badge_2: null as File | null,
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [oldImagePreviews, setOldImagePreviews] = useState<string[]>([]);
@@ -976,27 +1377,22 @@ export default function UploadPage() {
   );
   const [activeTab, setActiveTab] = useState("seo");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [activePoints, setActivePoints] = useState<number>(0);
+  const [activePoints, setActivePoints] = useState(0);
 
-  // Track form completion status
   const [tabCompletion, setTabCompletion] = useState({
     seo: false,
     basic: false,
     images: false,
     content: false,
-    settings: false, // Changed to false since we're making fields required
+    settings: false,
   });
 
   useEffect(() => {
-    // Update active points count on component mount
     updateActivePoints();
   }, []);
-
   useEffect(() => {
-    // Update tab completion status
     setTabCompletion({
-      ...tabCompletion,
-      seo: !!formData.seo_title && !!formData.meta_description, // Made required
+      seo: !!formData.seo_title && !!formData.meta_description,
       basic:
         !!formData.old_name &&
         !!formData.new_name &&
@@ -1012,7 +1408,7 @@ export default function UploadPage() {
         !!formData.description &&
         formData.description_points.filter((p) => p.trim()).length >= 2 &&
         !!formData.rename_reason,
-      settings: !!formData.next_redirect_url && formData.redirect_timer !== "", // Made required
+      settings: !!formData.next_redirect_url && formData.redirect_timer !== "",
     });
   }, [formData]);
 
@@ -1029,175 +1425,114 @@ export default function UploadPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      metadata: {
-        ...prev.metadata,
-        [name]: value,
-      },
+      metadata: { ...prev.metadata, [name]: value },
     }));
   };
 
   const handleDescriptionPointChange = (index: number, value: string) => {
     setFormData((prev) => {
-      const newPoints = [...prev.description_points];
-      newPoints[index] = value;
-      return { ...prev, description_points: newPoints };
+      const pts = [...prev.description_points];
+      pts[index] = value;
+      return { ...prev, description_points: pts };
     });
-
-    // Update the active points count
     updateActivePoints();
   };
 
   const updateActivePoints = () => {
-    const activeCount = formData.description_points.filter(
-      (p) => p.trim() !== ""
-    ).length;
-    setActivePoints(activeCount);
+    setActivePoints(
+      formData.description_points.filter((p) => p.trim() !== "").length
+    );
   };
-
   const addBulletPoint = () => {
-    // Add a new empty bullet point
     setFormData((prev) => ({
       ...prev,
       description_points: [...prev.description_points, ""],
     }));
-
-    // Focus the new field after render
     setTimeout(() => {
-      const newIndex = formData.description_points.length;
-      const element = document.getElementById(`bullet-point-${newIndex}`);
-      if (element) {
-        element.focus();
-      }
+      const idx = formData.description_points.length;
+      document.getElementById(`bullet-point-${idx}`)?.focus();
     }, 0);
   };
-
   const removeBulletPoint = (index: number) => {
     setFormData((prev) => {
-      const newPoints = [...prev.description_points];
-      newPoints.splice(index, 1);
-      return { ...prev, description_points: newPoints };
+      const pts = [...prev.description_points];
+      pts.splice(index, 1);
+      return { ...prev, description_points: pts };
     });
-
-    // Update the active points count
     setTimeout(updateActivePoints, 0);
   };
-
-  const handleThemeChange = (theme: string) => {
+  const handleThemeChange = (theme: string) =>
     setFormData((prev) => ({ ...prev, theme }));
-  };
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     type: "old" | "new" | "badge_image" | "extra_badge_1" | "extra_badge_2"
   ) => {
     const files = Array.from(e.target.files || []);
-
-    if (
-      type === "badge_image" ||
-      type === "extra_badge_1" ||
-      type === "extra_badge_2"
-    ) {
-      // For badge images, we only take the first file
+    if (["badge_image", "extra_badge_1", "extra_badge_2"].includes(type)) {
       if (files.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          [type]: files[0],
+          ...(type === "badge_image" && { badge_image_url: files[0] }),
+          ...(type === "extra_badge_1" && { extra_badge_1: files[0] }),
+          ...(type === "extra_badge_2" && { extra_badge_2: files[0] }),
         }));
-
-        // Set the appropriate preview
-        const previewUrl = URL.createObjectURL(files[0]);
-        if (type === "badge_image") {
-          setBadgeImagePreview(previewUrl);
-        } else if (type === "extra_badge_1") {
-          setExtraBadge1Preview(previewUrl);
-        } else if (type === "extra_badge_2") {
-          setExtraBadge2Preview(previewUrl);
-        }
+        const url = URL.createObjectURL(files[0]);
+        if (type === "badge_image") setBadgeImagePreview(url);
+        if (type === "extra_badge_1") setExtraBadge1Preview(url);
+        if (type === "extra_badge_2") setExtraBadge2Preview(url);
       }
     } else {
-      // For old and new images, we take multiple files
-      setFormData((prev) => ({
-        ...prev,
-        [type === "old" ? "old_images" : "new_images"]: files,
-      }));
-
-      // Generate image previews
-      const previews = files.map((file) => URL.createObjectURL(file));
-      if (type === "old") {
-        setOldImagePreviews(previews);
-      } else {
-        setNewImagePreviews(previews);
-      }
+      const field = type === "old" ? "old_images" : "new_images";
+      setFormData((prev) => ({ ...prev, [field]: files }));
+      const previews = files.map((f) => URL.createObjectURL(f));
+      if (type === "old") setOldImagePreviews(previews);
+      else setNewImagePreviews(previews);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {});
-  };
+  const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     const data = new FormData();
-
-    // Basic fields
     data.append("old_name", formData.old_name);
     data.append("new_name", formData.new_name);
     data.append("description", formData.description);
     data.append("next_redirect_url", formData.next_redirect_url);
     data.append("redirect_timer", formData.redirect_timer);
     data.append("theme", formData.theme);
-
-    // SEO fields
     data.append("page_title", formData.page_title);
     data.append("seo_title", formData.seo_title);
     data.append("meta_description", formData.meta_description);
-
-    // Content fields
     data.append("rename_reason", formData.rename_reason);
-
-    // Popup fields
     data.append("popup_title", formData.popup_title);
-
-    // Description points - only append non-empty points
-    const nonEmptyPoints = formData.description_points.filter(
-      (p) => p.trim() !== ""
+    data.append(
+      "description_points",
+      JSON.stringify(formData.description_points.filter((p) => p.trim()))
     );
-    data.append("description_points", JSON.stringify(nonEmptyPoints));
-
-    // Metadata as JSON
     data.append("metadata", JSON.stringify(formData.metadata));
-
-    // Images
-    formData.old_images.forEach((file) => data.append("old_images", file));
-    formData.new_images.forEach((file) => data.append("new_images", file));
-
-    // Badge images
-    if (formData.badge_image_url) {
+    formData.old_images.forEach((f) => data.append("old_images", f));
+    formData.new_images.forEach((f) => data.append("new_images", f));
+    if (formData.badge_image_url)
       data.append("badge_image", formData.badge_image_url);
-    }
-
-    if (formData.extra_badge_1) {
+    if (formData.extra_badge_1)
       data.append("extra_badge_1_image", formData.extra_badge_1);
-    }
-
-    if (formData.extra_badge_2) {
+    if (formData.extra_badge_2)
       data.append("extra_badge_2_image", formData.extra_badge_2);
-    }
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
       const res = await axios.post(`${baseUrl}/api/upload`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       if (res.status === 200) {
         setGeneratedLink(res.data.generatedLink);
         setShowSuccess(true);
       }
-    } catch (error) {
-      console.error("Upload error:", error);
+    } catch (err) {
+      console.error("Upload error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -1213,16 +1548,15 @@ export default function UploadPage() {
           </CardHeader>
           <CardContent className="text-center">
             <p className="mb-4">Your product has been uploaded successfully.</p>
-
             {generatedLink && (
               <div className="mb-6">
                 <p className="mb-2 font-semibold">Generated Link:</p>
                 <div className="bg-gray-100 p-3 rounded-md break-all flex items-center justify-between">
                   <a
                     href={generatedLink}
-                    className="text-blue-600 hover:underline"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
                   >
                     {generatedLink}
                   </a>
@@ -1230,22 +1564,20 @@ export default function UploadPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => copyToClipboard(generatedLink)}
-                    className="ml-2"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             )}
-
             {formData.next_redirect_url && (
               <p className="mb-6">
                 Redirect URL:{" "}
                 <a
                   href={formData.next_redirect_url}
-                  className="text-blue-600 hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
                 >
                   {formData.next_redirect_url}
                 </a>
@@ -1253,43 +1585,7 @@ export default function UploadPage() {
             )}
           </CardContent>
           <CardFooter className="flex justify-center gap-4">
-            <Button
-              onClick={() => {
-                setShowSuccess(false);
-                setGeneratedLink(null);
-                setFormData({
-                  old_name: "",
-                  new_name: "",
-                  description: "",
-                  description_points: ["", "", "", ""],
-                  rename_reason: "",
-                  metadata: {
-                    version: "",
-                    release_date: "",
-                  },
-                  next_redirect_url: "",
-                  redirect_timer: "0",
-                  theme: "light",
-                  page_title: "",
-                  seo_title: "",
-                  meta_description: "",
-                  popup_title: "",
-                  old_images: [],
-                  new_images: [],
-                  badge_image_url: null,
-                  extra_badge_1: null,
-                  extra_badge_2: null,
-                });
-                setOldImagePreviews([]);
-                setNewImagePreviews([]);
-                setBadgeImagePreview(null);
-                setExtraBadge1Preview(null);
-                setExtraBadge2Preview(null);
-                setActiveTab("seo");
-                setActivePoints(0);
-              }}
-              variant="outline"
-            >
+            <Button variant="outline" onClick={() => window.location.reload()}>
               Upload Another Product
             </Button>
             {generatedLink && (
