@@ -242,13 +242,10 @@ export default function ProductRebrandContent() {
     <main
       className={`min-h-screen overflow-hidden text-center relative ${
         product.theme === "dark"
-          ? "bg-[#17414f] text-[#007197]"
+          ? "bg-[#17414f] text-white"
           : "bg-[#e2f5fb] text-[#17414f]"
       }`}
     >
-      {/* Theme Toggle */}
-      <div className="absolute top-4 right-4 z-50">{/* <ThemeToggle /> */}</div>
-
       {/* First Section */}
       <section className="relative z-10 flex flex-col items-center justify-center px-4 py-20 md:py-4 lg:py-8">
         {/* Timer */}
@@ -270,18 +267,18 @@ export default function ProductRebrandContent() {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-center mb-8 max-w-4xl"
         >
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-            <span className="text-[#41bae3] dark:text-[#41bae3]">
-              {product.old_name}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl  mb-4">
+            <span className="text font-bold">
+              {product.old_name.toUpperCase()}
             </span>{" "}
-            <span className="text-[#007197] dark:text-white">
+            <span className="text font-medium">
               HAS BEEN RENAMED TO
             </span>{" "}
-            <span className="text-[#482af4] dark:text-white">
-              {product.new_name}
+            <span className="text font-bold">
+              {product.new_name.toUpperCase()}
             </span>
           </h1>
-          <p className="text-xl sm:text-2xl text-[#007197] dark:text-white font-medium">
+          <p className="text-xl sm:text-2xl text font-medium">
             DUE TO COUNTERFEIT ISSUES
           </p>
         </motion.div>
@@ -301,11 +298,12 @@ export default function ProductRebrandContent() {
                 alt={`${product.old_name} bottle`}
                 width={200}
                 height={250}
+                unoptimized
                 style={{ objectFit: "contain" }}
                 className="p-2 md:ml-5   "
               />
             </div>
-            <span className="text-[#007197] dark:text-[#41bae3] font-bold text-xl xs:text-lg sm:text-2xl sm:font-bold md:text-3xl text-center mt-2 xs:mt-4">
+            <span className="text font-bold text-xl xs:text-lg sm:text-2xl sm:font-bold md:text-3xl text-center mt-2 xs:mt-4">
               {product.old_name}
             </span>
           </motion.div>
@@ -374,6 +372,7 @@ export default function ProductRebrandContent() {
                 alt={`${product.new_name} bottle`}
                 width={200}
                 height={250}
+                unoptimized
                 style={{ objectFit: "contain" }}
                 className="p-2 md:ml-5  "
               />
@@ -383,11 +382,12 @@ export default function ProductRebrandContent() {
                   alt="Money Back Guarantee"
                   width={100}
                   height={100}
+                  unoptimized
                   className="drop-shadow-lg"
                 />
               </div>
             </motion.div>
-            <span className="text-[#c9351b] font-bold text-xl xs:text-lg sm:text-xl md:text-3xl sm:font-bold text-center  xs:mt-4">
+            <span className="text font-bold text-xl xs:text-lg sm:text-xl md:text-3xl sm:font-bold text-center  xs:mt-4">
               {product.new_name}
             </span>
           </motion.div>
@@ -448,6 +448,7 @@ export default function ProductRebrandContent() {
                   alt={`${product.old_name} bottle`}
                   width={450}
                   height={500}
+                  unoptimized
                   style={{ objectFit: "contain" }}
                   className="absolute drop-shadow-xl w-[250px] h-[300px] sm:w-[500px] sm:h-[500px] object-cover rounded-lg md:ml-56 opacity-50"
                 />
@@ -463,7 +464,7 @@ export default function ProductRebrandContent() {
                 >
                   <Image
                     src={newImageSrc || "/placeholder.svg"}
-                    alt={`${product.new_name} bottle`}
+                    alt={`${product.new_name.toUpperCase()} bottle`}
                     width={250}
                     height={300}
                     style={{ objectFit: "contain" }}
@@ -477,6 +478,7 @@ export default function ProductRebrandContent() {
                     width={150}
                     height={150}
                     priority
+                    unoptimized
                     className="drop-shadow-lg"
                   />
                 </div>
@@ -491,11 +493,11 @@ export default function ProductRebrandContent() {
               viewport={{ once: true }}
               className="md:w-1/2 text-left"
             >
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#007197] dark:text-white mb-6">
-                {product.new_name}{" "}
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text mb-6">
+                {product.new_name.toUpperCase()}{" "}
               </h2>
 
-              <p className="text-[#007197] dark:text-gray-200 mb-6 text-lg">
+              <p className="text mb-6 text-lg">
                 {product.description}
               </p>
 
