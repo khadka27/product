@@ -143,6 +143,10 @@ const config: Config = {
           "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
           "100%": { transform: "translate(0px, 0px) scale(1)" },
         },
+        blink: {
+          "0%, 100%": { color: "inherit" },
+          "50%": { color: "rgb(239, 68, 68)" }, // text-red-500
+        },
       },
       animation: {
         sine: "sine 2s ease-in-out infinite",
@@ -158,6 +162,7 @@ const config: Config = {
         "float-slow-reverse": "float-slow-reverse 12s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         blob: "blob 10s infinite",
+        blink: "blink 4s ease-in-out infinite",
       },
       skew: {
         30: "30deg",

@@ -271,9 +271,7 @@ export default function ProductRebrandContent() {
             <span className="text font-bold">
               {product.old_name.toUpperCase()}
             </span>{" "}
-            <span className="text font-medium">
-              HAS BEEN RENAMED TO
-            </span>{" "}
+            <span className="text font-medium">HAS BEEN RENAMED TO</span>{" "}
             <span className="text font-bold">
               {product.new_name.toUpperCase()}
             </span>
@@ -387,7 +385,7 @@ export default function ProductRebrandContent() {
                 />
               </div>
             </motion.div>
-            <span className="text font-bold text-xl xs:text-lg sm:text-xl md:text-3xl sm:font-bold text-center  xs:mt-4">
+            <span className="text font-bold text-xl xs:text-lg sm:text-xl md:text-3xl sm:font-bold text-center xs:mt-4 animate-[blink_4s_ease-in-out_infinite]">
               {product.new_name}
             </span>
           </motion.div>
@@ -497,9 +495,7 @@ export default function ProductRebrandContent() {
                 {product.new_name.toUpperCase()}{" "}
               </h2>
 
-              <p className="text mb-6 text-lg">
-                {product.description}
-              </p>
+              <p className="text mb-6 text-lg">{product.description}</p>
 
               <ul className="space-y-4 mb-8">
                 {product.description_points.map((point, index) => (

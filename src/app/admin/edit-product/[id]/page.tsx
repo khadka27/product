@@ -42,7 +42,6 @@ export default function EditProductPage() {
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   // Fetch product details and pre-fill form data.
   useEffect(() => {
     const fetchProduct = async () => {
@@ -50,16 +49,25 @@ export default function EditProductPage() {
         const res = await axios.get(
           `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`
         );
-        setProduct(res.data);
+        const productData = res.data;
+        setProduct(productData);
+
+        // Set the form data from the fetched product
         setFormData({
-          old_name: res.data.old_name,
-          new_name: res.data.new_name,
-          description: res.data.description,
-          next_redirect_url: res.data.next_redirect_url,
-          theme: res.data.theme,
+          old_name: productData.old_name || "",
+          new_name: productData.new_name || "",
+          description: productData.description || "",
+          next_redirect_url: productData.next_redirect_url || "",
+          theme: productData.theme || "light",
         });
-        setOldImageURLs(JSON.parse(res.data.old_images));
-        setNewImageURLs(JSON.parse(res.data.new_images));
+
+        // Handle the image URLs (API already parses the JSON)
+        setOldImageURLs(
+          Array.isArray(productData.old_images) ? productData.old_images : []
+        );
+        setNewImageURLs(
+          Array.isArray(productData.new_images) ? productData.new_images : []
+        );
         setLoading(false);
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -122,24 +130,27 @@ export default function EditProductPage() {
     data.append("new_name", formData.new_name);
     data.append("description", formData.description);
     data.append("next_redirect_url", formData.next_redirect_url);
-    data.append("theme", formData.theme);
-
-    // If a new file was chosen, use that; otherwise, send the existing URL.
+    data.append("theme", formData.theme); // If a new file was chosen, use that; otherwise, send the existing URL.
     if (oldImageFiles.length > 0) {
       oldImageFiles.forEach((file) => data.append("old_images", file));
-    } else {
-      oldImageURLs.forEach((url) => data.append("old_images_existing", url));
+    } else if (oldImageURLs.length > 0) {
+      // Send the existing URLs as a JSON string
+      data.append("old_images_existing", JSON.stringify(oldImageURLs));
     }
     if (newImageFiles.length > 0) {
       newImageFiles.forEach((file) => data.append("new_images", file));
-    } else {
-      newImageURLs.forEach((url) => data.append("new_images_existing", url));
+    } else if (newImageURLs.length > 0) {
+      // Send the existing URLs as a JSON string
+      data.append("new_images_existing", JSON.stringify(newImageURLs));
     }
-
     try {
-      const res = await axios.put(`/api/product/${params.id}`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`,
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       if (res.status === 200) {
         router.push("/admin/dashboard");
       }
