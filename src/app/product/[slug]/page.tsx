@@ -256,7 +256,9 @@ export default function ProductRebrandContent() {
             transition={{ duration: 0.5 }}
             className="mb-4 px-6 py-2 bg-[#c9351b] text-white font-bold rounded-full shadow-lg"
           >
-            <span>Hurry Slots Available only {timeLeft} sec</span>
+            <span>
+              Redirecting to the Secured Product Page in {timeLeft} sec
+            </span>
           </motion.div>
         )}
 
