@@ -420,46 +420,45 @@
 //   );
 // }
 
+"use client";
 
-"use client"
+import type React from "react";
 
-import type React from "react"
-
-import { useState, useEffect, useCallback } from "react"
-import { useParams, useRouter } from "next/navigation"
-import axios from "axios"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { useDropzone } from "react-dropzone"
-import Navbar from "@/components/navbar"
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useDropzone } from "react-dropzone";
+import Navbar from "@/components/navbar";
 
 type Product = {
-  id: string
-  old_name: string
-  new_name: string
-  description: string
-  description_points: string[]
-  next_redirect_url: string
-  redirect_timer: number
-  theme: string
-  generated_link: string
-  old_images: string[]
-  new_images: string[]
+  id: string;
+  old_name: string;
+  new_name: string;
+  description: string;
+  description_points: string[];
+  next_redirect_url: string;
+  redirect_timer: number;
+  theme: string;
+  generated_link: string;
+  old_images: string[];
+  new_images: string[];
   // badge_image_url?: string
   // extra_badge_1?: string
   // extra_badge_2?: string
-  meta_description?: string
-  seo_title?: string
-  rename_reason?: string
-  total_clicks?: number
-}
+  meta_description?: string;
+  seo_title?: string;
+  rename_reason?: string;
+  total_clicks?: number;
+};
 
 export default function EditProductPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [product, setProduct] = useState<Product | null>(null)
+  const params = useParams();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     old_name: "",
     new_name: "",
@@ -477,156 +476,176 @@ export default function EditProductPage() {
     // badge_image_url: "",
     // extra_badge_1: "",
     // extra_badge_2: "",
-  })
+  });
 
   // For images: existing image URLs and new file replacements.
-  const [oldImageURLs, setOldImageURLs] = useState<string[]>([])
-  const [newImageURLs, setNewImageURLs] = useState<string[]>([])
-  const [oldImageFiles, setOldImageFiles] = useState<File[]>([])
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([])
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [oldImageURLs, setOldImageURLs] = useState<string[]>([]);
+  const [newImageURLs, setNewImageURLs] = useState<string[]>([]);
+  const [oldImageFiles, setOldImageFiles] = useState<File[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch product details and pre-fill form data.
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`)
-        const productData = res.data
-        setProduct(productData)
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`
+        );
+        const productData = res.data;
+        setProduct(productData);
 
         // Set the form data from the fetched product
         setFormData({
           old_name: productData.old_name || "",
           new_name: productData.new_name || "",
           description: productData.description || "",
-          description_points: Array.isArray(productData.description_points) ? productData.description_points : [],
+          description_points: Array.isArray(productData.description_points)
+            ? productData.description_points
+            : [],
           next_redirect_url: productData.next_redirect_url || "",
           redirect_timer: productData.redirect_timer || 0,
           theme: productData.theme || "light",
           meta_description: productData.meta_description || "",
           seo_title: productData.seo_title || "",
-          
-        })
+        });
 
         // Handle the image URLs (API already parses the JSON)
-        setOldImageURLs(Array.isArray(productData.old_images) ? productData.old_images : [])
-        setNewImageURLs(Array.isArray(productData.new_images) ? productData.new_images : [])
-        setLoading(false)
+        setOldImageURLs(
+          Array.isArray(productData.old_images) ? productData.old_images : []
+        );
+        setNewImageURLs(
+          Array.isArray(productData.new_images) ? productData.new_images : []
+        );
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching product:", error)
-        setLoading(false)
+        console.error("Error fetching product:", error);
+        setLoading(false);
       }
-    }
+    };
     if (params.id) {
-      fetchProduct()
+      fetchProduct();
     }
-  }, [params.id])
+  }, [params.id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, theme: e.target.value }))
-  }
+    setFormData((prev) => ({ ...prev, theme: e.target.value }));
+  };
 
   const handleDescriptionPointChange = (index: number, value: string) => {
     setFormData((prev) => {
-      const newPoints = [...prev.description_points]
-      newPoints[index] = value
-      return { ...prev, description_points: newPoints }
-    })
-  }
+      const newPoints = [...prev.description_points];
+      newPoints[index] = value;
+      return { ...prev, description_points: newPoints };
+    });
+  };
 
   const addDescriptionPoint = () => {
     if (formData.description_points.length < 4) {
       setFormData((prev) => ({
         ...prev,
         description_points: [...prev.description_points, ""],
-      }))
+      }));
     }
-  }
+  };
 
   const removeDescriptionPoint = (index: number) => {
     setFormData((prev) => {
-      const newPoints = [...prev.description_points]
-      newPoints.splice(index, 1)
-      return { ...prev, description_points: newPoints }
-    })
-  }
+      const newPoints = [...prev.description_points];
+      newPoints.splice(index, 1);
+      return { ...prev, description_points: newPoints };
+    });
+  };
 
   // Dropzone for old images: if new file(s) are chosen, replace old images.
   const onDropOld = useCallback((acceptedFiles: File[]) => {
-    setOldImageFiles(acceptedFiles) // Replace existing new file state.
-    setOldImageURLs([]) // Clear preserved URL(s).
-  }, [])
-  const { getRootProps: getOldRootProps, getInputProps: getOldInputProps } = useDropzone({
-    onDrop: onDropOld,
-    accept: { "image/*": [] },
-    multiple: false, // Allow only one replacement image.
-  })
+    setOldImageFiles(acceptedFiles); // Replace existing new file state.
+    setOldImageURLs([]); // Clear preserved URL(s).
+  }, []);
+  const { getRootProps: getOldRootProps, getInputProps: getOldInputProps } =
+    useDropzone({
+      onDrop: onDropOld,
+      accept: { "image/*": [] },
+      multiple: false, // Allow only one replacement image.
+    });
 
   // Dropzone for new images: if new file(s) are chosen, replace new images.
   const onDropNew = useCallback((acceptedFiles: File[]) => {
-    setNewImageFiles(acceptedFiles)
-    setNewImageURLs([])
-  }, [])
-  const { getRootProps: getNewRootProps, getInputProps: getNewInputProps } = useDropzone({
-    onDrop: onDropNew,
-    accept: { "image/*": [] },
-    multiple: false, // Allow only one replacement image.
-  })
+    setNewImageFiles(acceptedFiles);
+    setNewImageURLs([]);
+  }, []);
+  const { getRootProps: getNewRootProps, getInputProps: getNewInputProps } =
+    useDropzone({
+      onDrop: onDropNew,
+      accept: { "image/*": [] },
+      multiple: false, // Allow only one replacement image.
+    });
 
   // Form validation: require non-empty text fields.
   const isFormValid =
-    formData.old_name.trim() && formData.new_name.trim() && formData.description.trim() && formData.theme.trim()
+    formData.old_name.trim() &&
+    formData.new_name.trim() &&
+    formData.description.trim() &&
+    formData.theme.trim();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-    setError(null)
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
 
-    const data = new FormData()
+    const data = new FormData();
 
     // Add all form fields to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (key === "description_points") {
-        data.append(key, JSON.stringify(value))
+        data.append(key, JSON.stringify(value));
       } else if (value !== null && value !== undefined) {
-        data.append(key, value.toString())
+        data.append(key, value.toString());
       }
-    })
+    });
 
     // Handle images
     if (oldImageFiles.length > 0) {
-      oldImageFiles.forEach((file) => data.append("old_images", file))
+      oldImageFiles.forEach((file) => data.append("old_images", file));
     } else if (oldImageURLs.length > 0) {
       // Send the existing URLs as a JSON string
-      data.append("old_images_existing", JSON.stringify(oldImageURLs))
+      data.append("old_images_existing", JSON.stringify(oldImageURLs));
     }
 
     if (newImageFiles.length > 0) {
-      newImageFiles.forEach((file) => data.append("new_images", file))
+      newImageFiles.forEach((file) => data.append("new_images", file));
     } else if (newImageURLs.length > 0) {
       // Send the existing URLs as a JSON string
-      data.append("new_images_existing", JSON.stringify(newImageURLs))
+      data.append("new_images_existing", JSON.stringify(newImageURLs));
     }
 
     try {
-      const res = await axios.put(`${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/product/${params.id}`,
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       if (res.status === 200) {
-        router.push("/admin/dashboard")
+        router.push("/admin/dashboard");
       }
     } catch (error) {
-      console.error("Update error:", error)
-      setError(error instanceof Error ? error.message : "Failed to update product")
+      console.error("Update error:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to update product"
+      );
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -639,7 +658,7 @@ export default function EditProductPage() {
           </div>
         </div>
       </>
-    )
+    );
   }
   if (!product) {
     return (
@@ -647,7 +666,11 @@ export default function EditProductPage() {
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 max-w-xl mx-auto">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg
+                className="h-5 w-5 text-yellow-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
                 <path
                   fillRule="evenodd"
                   d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -657,10 +680,15 @@ export default function EditProductPage() {
             </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                Product not found. The product may have been deleted or you may not have permission to view it.
+                Product not found. The product may have been deleted or you may
+                not have permission to view it.
               </p>
               <div className="mt-4">
-                <Button onClick={() => router.push("/admin/dashboard")} variant="outline" size="sm">
+                <Button
+                  onClick={() => router.push("/admin/dashboard")}
+                  variant="outline"
+                  size="sm"
+                >
                   Return to Dashboard
                 </Button>
               </div>
@@ -668,30 +696,53 @@ export default function EditProductPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <main className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Edit Product</h1>
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto bg-white shadow p-8 rounded-lg">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 max-w-xl mx-auto bg-white shadow p-8 rounded-lg"
+      >
         <div className="flex flex-col">
           <label htmlFor="old_name" className="font-medium mb-1">
             Old Name
           </label>
-          <Input id="old_name" type="text" name="old_name" value={formData.old_name} onChange={handleChange} required />
+          <Input
+            id="old_name"
+            type="text"
+            name="old_name"
+            value={formData.old_name}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="flex flex-col">
           <label htmlFor="new_name" className="font-medium mb-1">
             New Name
           </label>
-          <Input id="new_name" type="text" name="new_name" value={formData.new_name} onChange={handleChange} required />
+          <Input
+            id="new_name"
+            type="text"
+            name="new_name"
+            value={formData.new_name}
+            onChange={handleChange}
+            required
+          />
         </div>
         <div className="flex flex-col">
           <label htmlFor="description" className="font-medium mb-1">
             Description
           </label>
-          <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required />
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            required
+          />
         </div>
 
         {/* Description Points */}
@@ -702,16 +753,28 @@ export default function EditProductPage() {
               <div key={index} className="flex gap-2">
                 <Input
                   value={point}
-                  onChange={(e) => handleDescriptionPointChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleDescriptionPointChange(index, e.target.value)
+                  }
                   placeholder={`Point ${index + 1}`}
                 />
-                <Button type="button" variant="outline" size="icon" onClick={() => removeDescriptionPoint(index)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => removeDescriptionPoint(index)}
+                >
                   ×
                 </Button>
               </div>
             ))}
             {formData.description_points.length < 4 && (
-              <Button type="button" variant="outline" onClick={addDescriptionPoint} className="w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addDescriptionPoint}
+                className="w-full"
+              >
                 Add Point
               </Button>
             )}
@@ -790,7 +853,12 @@ export default function EditProductPage() {
             <label htmlFor="seo_title" className="font-medium mb-1">
               SEO Title
             </label>
-            <Input id="seo_title" name="seo_title" value={formData.seo_title} onChange={handleChange} />
+            <Input
+              id="seo_title"
+              name="seo_title"
+              value={formData.seo_title}
+              onChange={handleChange}
+            />
           </div>
 
           {/* <div className="flex flex-col">
@@ -887,13 +955,19 @@ export default function EditProductPage() {
             className="border-dashed border-2 p-4 text-center cursor-pointer rounded hover:bg-gray-50 transition-colors"
           >
             <input {...getOldInputProps()} />
-            <p>{oldImageFiles.length > 0 ? "Replace image" : "Drag and drop or click to replace old image"}</p>
+            <p>
+              {oldImageFiles.length > 0
+                ? "Replace image"
+                : "Drag and drop or click to replace old image"}
+            </p>
           </div>
           {/* Preview new file if chosen */}
           {oldImageFiles.length > 0 && (
             <div className="relative mt-2 inline-block">
               <img
-                src={URL.createObjectURL(oldImageFiles[0]) || "/placeholder.svg"}
+                src={
+                  URL.createObjectURL(oldImageFiles[0]) || "/placeholder.svg"
+                }
                 alt="New Old"
                 className="h-24 w-24 object-cover rounded border"
               />
@@ -933,12 +1007,18 @@ export default function EditProductPage() {
             className="border-dashed border-2 p-4 text-center cursor-pointer rounded hover:bg-gray-50 transition-colors"
           >
             <input {...getNewInputProps()} />
-            <p>{newImageFiles.length > 0 ? "Replace image" : "Drag and drop or click to replace new image"}</p>
+            <p>
+              {newImageFiles.length > 0
+                ? "Replace image"
+                : "Drag and drop or click to replace new image"}
+            </p>
           </div>
           {newImageFiles.length > 0 && (
             <div className="relative mt-2 inline-block">
               <img
-                src={URL.createObjectURL(newImageFiles[0]) || "/placeholder.svg"}
+                src={
+                  URL.createObjectURL(newImageFiles[0]) || "/placeholder.svg"
+                }
                 alt="New New"
                 className="h-24 w-24 object-cover rounded border"
               />
@@ -953,11 +1033,19 @@ export default function EditProductPage() {
             </div>
           )}
         </div>
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
-        <Button type="submit" className="w-full" disabled={!isFormValid || submitting}>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={!isFormValid || submitting}
+        >
           {submitting ? "Updating..." : "Update Product"}
         </Button>
       </form>
     </main>
-  )
+  );
 }
